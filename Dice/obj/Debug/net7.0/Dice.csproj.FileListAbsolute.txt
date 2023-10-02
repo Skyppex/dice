@@ -1,0 +1,14 @@
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\bin\Debug\net7.0\Dice.exe
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\bin\Debug\net7.0\Dice.deps.json
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\bin\Debug\net7.0\Dice.runtimeconfig.json
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\bin\Debug\net7.0\Dice.dll
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\bin\Debug\net7.0\Dice.pdb
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\Dice.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\Dice.AssemblyInfoInputs.cache
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\Dice.AssemblyInfo.cs
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\Dice.csproj.CoreCompileInputs.cache
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\Dice.dll
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\refint\Dice.dll
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\Dice.pdb
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\Dice.genruntimeconfig.cache
+C:\Users\brage.ingebrigtsen\RiderProjects\Dice\Dice\obj\Debug\net7.0\ref\Dice.dll

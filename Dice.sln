@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dice", "Dice\Dice.csproj", "{1475C19D-F259-4A7F-B57F-BB0058FDD20E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceTests", "DiceTests\DiceTests.csproj", "{5ADE094A-C432-45BD-8C51-850C46AC43E8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1475C19D-F259-4A7F-B57F-BB0058FDD20E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1475C19D-F259-4A7F-B57F-BB0058FDD20E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1475C19D-F259-4A7F-B57F-BB0058FDD20E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1475C19D-F259-4A7F-B57F-BB0058FDD20E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5ADE094A-C432-45BD-8C51-850C46AC43E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5ADE094A-C432-45BD-8C51-850C46AC43E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5ADE094A-C432-45BD-8C51-850C46AC43E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5ADE094A-C432-45BD-8C51-850C46AC43E8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
