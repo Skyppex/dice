@@ -18,31 +18,34 @@ public class Parser
     {
         IExpression left = ParseMultiplicative();
 
-        if (!_tokens.TryPeek(out IToken nextToken) || nextToken is not OperatorToken operatorToken)
-            return left;
-        
-        if (operatorToken.Operator is not (Tokens.ADD or Tokens.SUB))
-            return left;
-        
-        _tokens.Dequeue();
-        IExpression right = ParseMultiplicative();
-        return new BinaryExpression(left, operatorToken.Operator, right);
+        while (_tokens.TryPeek(out IToken nextToken) && nextToken is OperatorToken operatorToken)
+        {
+            if (operatorToken.Operator is not (Tokens.ADD or Tokens.SUB))
+                continue;
+            
+            _tokens.Dequeue();
+            IExpression right = ParseMultiplicative();
+            left = new BinaryExpression(left, operatorToken.Operator, right);
+        }
 
+        return left;
     }
 
     private IExpression ParseMultiplicative()
     {
         IExpression left = ParsePrimary();
-        
-        if (!_tokens.TryPeek(out IToken nextToken) || nextToken is not OperatorToken operatorToken)
-            return left;
-        
-        if (operatorToken.Operator is not (Tokens.MUL or Tokens.DIV or Tokens.MOD))
-            return left;
-        
-        _tokens.Dequeue();
-        IExpression right = ParsePrimary();
-        return new BinaryExpression(left, operatorToken.Operator, right);
+
+        while (_tokens.TryPeek(out IToken nextToken) && nextToken is OperatorToken operatorToken)
+        {
+            if (operatorToken.Operator is not (Tokens.MUL or Tokens.DIV or Tokens.MOD))
+                return left;
+            
+            _tokens.Dequeue();
+            IExpression right = ParsePrimary();
+            left = new BinaryExpression(left, operatorToken.Operator, right);
+        }
+
+        return left;
     }
     
     private IExpression ParsePrimary()
