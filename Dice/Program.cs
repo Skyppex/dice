@@ -6,7 +6,7 @@ string input = string.Join(" ", args);
 Console.WriteLine($"Input: {input}");
 #endif
 
-if (input == string.Empty)
+if (input is "" or "h" or "-h" or "--h" or "help" or "-help" or "--help" or "-?" or "--?" or "/?")
 {
     Help.Print();
     return;
