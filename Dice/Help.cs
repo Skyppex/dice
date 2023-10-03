@@ -10,7 +10,7 @@ public static class Help
         builder.AppendLine("usage: dice <expression>");
         builder.AppendLine();
         builder.AppendLine("make a dice roll");
-        builder.AppendLine(WriteExplanation("<rolls>d<sides>", "Roll <rolls> dice with <sides> sides and sums them together -> 4d6"));
+        builder.AppendLine(WriteExplanation("<rolls>d<sides>", "Roll <rolls> dice with <sides> sides and sum them together -> 4d6"));
         builder.AppendLine();
         builder.AppendLine("modifiers:");
         builder.AppendLine(WriteExplanation("k[<keep>]", "Keep the highest <keep> (default 1) -> 4d6k3"));
