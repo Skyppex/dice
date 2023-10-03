@@ -11,7 +11,7 @@ public class ExpressionTests
         for (int i = 0; i < 1000; i++)
         {
             // Arrange
-            var expression = new DiceExpression(1, 20);
+            var expression = new DiceExpression(1, 20, DiceExpression.Modes.Default);
             
             // Act
             var result = expression.Evaluate();

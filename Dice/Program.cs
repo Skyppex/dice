@@ -1,6 +1,6 @@
 ﻿using Dice;
 
-var input = string.Join("", args);
+var input = string.Join(" ", args);
 Console.WriteLine($"Input: {input}");
 
 var tokens = new Tokenizer().Tokenize(input);

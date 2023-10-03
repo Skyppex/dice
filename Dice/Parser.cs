@@ -18,7 +18,7 @@ public class Parser
     {
         IExpression left = ParseMultiplicative();
 
-        while (_tokens.TryPeek(out IToken nextToken) && nextToken is OperatorToken operatorToken)
+        while (_tokens.TryPeek(out IToken? nextToken) && nextToken is OperatorToken operatorToken)
         {
             if (operatorToken.Operator is not (Tokens.ADD or Tokens.SUB))
                 continue;
@@ -35,7 +35,7 @@ public class Parser
     {
         IExpression left = ParsePrimary();
 
-        while (_tokens.TryPeek(out IToken nextToken) && nextToken is OperatorToken operatorToken)
+        while (_tokens.TryPeek(out IToken? nextToken) && nextToken is OperatorToken operatorToken)
         {
             if (operatorToken.Operator is not (Tokens.MUL or Tokens.DIV or Tokens.MOD))
                 return left;
@@ -59,10 +59,7 @@ public class Parser
             {
                 if (_tokens.TryPeek(out IToken? nextToken) && nextToken is DiceToken)
                 {
-                    _tokens.Dequeue();
-                    
-                    var secondNumberToken = Expect<NumberToken>("Expected number after d");
-                    return new DiceExpression(numberToken.Number, secondNumberToken.Number);
+                    return ParseDice(numberToken);
                 }
                 
                 return new NumberExpression(numberToken.Number);
@@ -71,6 +68,81 @@ public class Parser
         }
         
         throw new Exception($"Unexpected token: {token.Value}");
+    }
+
+    private IExpression ParseDice(NumberToken numberToken)
+    {
+        _tokens.Dequeue();
+
+        var secondNumberToken = Expect<NumberToken>("Expected number after d");
+
+        if (!_tokens.TryPeek(out IToken? nextToken) || nextToken is not (KeepToken or DropToken))
+            return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.Default);
+        
+        _tokens.Dequeue();
+
+        switch (nextToken)
+        {
+            case KeepToken:
+            {
+                if (_tokens.TryPeek(out IToken? nextNextToken))
+                {
+                    switch (nextNextToken)
+                    {
+                        case LowestToken:
+                        {
+                            _tokens.Dequeue();
+                            var amount = Expect<NumberToken>("Expected number after k");
+                            return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.KeepLowest(amount.Number));
+                        }
+                        
+                        case HighestToken:
+                        {
+                            _tokens.Dequeue();
+                            var amount = Expect<NumberToken>("Expected number after k");
+                            return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.KeepHighest(amount.Number));
+                        }
+                        
+                        default:
+                        {
+                            var amount = Expect<NumberToken>("Expected number after k");
+                            return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.KeepHighest(amount.Number));
+                        }
+                    }
+                }
+
+                break;
+            }
+                
+            case DropToken:
+            {
+                if (_tokens.TryPeek(out IToken? nextNextToken))
+                {
+                    switch (nextNextToken)
+                    {
+                        case HighestToken:
+                        {
+                            _tokens.Dequeue();
+                            var amount = Expect<NumberToken>("Expected number after dh");
+                            return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.DropHighest(amount.Number));
+                        }
+                        case LowestToken:
+                        {
+                            _tokens.Dequeue();
+                            var amount = Expect<NumberToken>("Expected number after dl");
+                            return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.DropLowest(amount.Number));
+                        }
+                        
+                        default:
+                            throw new Exception($"Unexpected token: {nextNextToken.Value}. Expected h or l after d when choosing to drop dice");
+                    }
+                }
+
+                break;
+            }
+        }
+
+        return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.Default);
     }
 
     private TToken Expect<TToken>(string errorMessage) where TToken : IToken
@@ -89,19 +161,127 @@ public interface IExpression
     public DiceResult Evaluate();
 }
 
-public record DiceExpression(int Amount, int Dice) : IExpression
+public record DiceExpression(int Amount, int Dice, DiceExpression.IMode Mode) : IExpression
 {
-    public string Symbol => $"{Amount}d{Dice}";
+    public string Symbol => $"{Amount}d{Dice}{Mode.Symbol}";
     
-    public DiceResult Evaluate()
-    {
-        var rand = Random.Shared;
-        int total = 0;
-        
-        for (int i = 0; i < Amount; i++)
-            total += rand.Next(1, Dice + 1);
+    public DiceResult Evaluate() => Mode.Evaluate(Amount, Dice);
 
-        return new DiceResult(total, $"'{total}'");
+    public static class Modes
+    {
+        public static IMode Default => new DefaultMode();
+        public static IMode KeepHighest(int amount) => new KeepHighestMode(amount);
+        public static IMode KeepLowest(int amount) => new KeepLowestMode(amount);
+        public static IMode DropHighest(int amount) => new DropHighestMode(amount);
+        public static IMode DropLowest(int amount) => new DropLowestMode(amount);
+    }
+
+    public interface IMode
+    {
+        public DiceResult Evaluate(int amount, int dice);
+        public string Symbol { get; }
+    }
+
+    private record DefaultMode : IMode
+    {
+        public DiceResult Evaluate(int amount, int dice)
+        {
+            var rand = Random.Shared;
+
+            var rolls = Enumerable.Range(0, amount)
+                .Select(_ => rand.Next(1, dice + 1))
+                .ToArray();
+
+            int total = rolls.Sum();
+            
+            return new DiceResult(total, $"[{string.Join(", ", rolls)}]");
+        }
+
+        public string Symbol => string.Empty;
+    }
+
+    private record KeepHighestMode(int Amount) : IMode
+    {
+        public DiceResult Evaluate(int amount, int dice)
+        {
+            var rand = Random.Shared;
+
+            var rolls = Enumerable.Range(0, amount)
+                .Select(_ => rand.Next(1, dice + 1))
+                .OrderByDescending(n => n)
+                .ToArray();
+            
+            int total = rolls
+                .Take(Amount)
+                .Sum();
+
+            return new DiceResult(total, $"[{string.Join(", ", rolls.Take(Amount))}, {string.Join(", ", rolls.Skip(Amount).Select(r => r + "d"))}]");
+        }
+
+        public string Symbol => $"kh{Amount}";
+    }
+
+    private record KeepLowestMode(int Amount) : IMode
+    {
+        public DiceResult Evaluate(int amount, int dice)
+        {
+            var rand = Random.Shared;
+            
+            var rolls = Enumerable.Range(0, amount)
+                .Select(_ => rand.Next(1, dice + 1))
+                .OrderBy(n => n)
+                .ToArray();
+            
+            int total = rolls
+                .Take(Amount)
+                .Sum();
+
+            return new DiceResult(total, $"[{string.Join(", ", rolls.Take(Amount))}, {string.Join(", ", rolls.Skip(Amount).Select(r => r + "d"))}]");
+        }
+
+        public string Symbol => $"kl{Amount}";
+    }
+
+    private record DropHighestMode(int Amount) : IMode
+    {
+        public DiceResult Evaluate(int amount, int dice)
+        {
+            var rand = Random.Shared;
+            
+            var rolls = Enumerable.Range(0, amount)
+                .Select(_ => rand.Next(1, dice + 1))
+                .OrderByDescending(n => n)
+                .ToArray();
+
+            int total = rolls
+                .Skip(Amount)
+                .Sum();
+
+            return new DiceResult(total, $"[{string.Join(", ", rolls.Take(Amount).Select(r => r + "d"))}, {string.Join(", ", rolls.Skip(Amount))}]");
+        }
+
+        public string Symbol => $"dh{Amount}";
+    }
+
+    private record DropLowestMode(int Amount) : IMode
+    {
+        public DiceResult Evaluate(int amount, int dice)
+        {
+            var rand = Random.Shared;
+            
+            var rolls = Enumerable.Range(0, amount)
+                .Select(_ => rand.Next(1, dice + 1))
+                .OrderBy(n => n)
+                .ToArray();
+
+            int total = rolls
+                .Skip(Amount)
+                .Sum(_ => rand.Next(1, dice + 1));
+
+            return new DiceResult(total, $"[{string.Join(", ", rolls.Take(Amount).Select(r => r + "d"))}, {string.Join(", ", rolls.Skip(Amount))}]");
+        }
+
+        public string Symbol => $"dl{Amount}";
     }
 }
 
