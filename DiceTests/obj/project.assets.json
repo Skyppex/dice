@@ -1137,19 +1137,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\": {}
+    "C:\\Users\\Brage\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\DiceTests\\DiceTests.csproj",
+      "projectUniqueName": "D:\\Coding\\C#\\dice\\DiceTests\\DiceTests.csproj",
       "projectName": "DiceTests",
-      "projectPath": "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\DiceTests\\DiceTests.csproj",
-      "packagesPath": "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\DiceTests\\obj\\",
+      "projectPath": "D:\\Coding\\C#\\dice\\DiceTests\\DiceTests.csproj",
+      "packagesPath": "C:\\Users\\Brage\\.nuget\\packages\\",
+      "outputPath": "D:\\Coding\\C#\\dice\\DiceTests\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\brage.ingebrigtsen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Brage\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -1163,8 +1168,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\Dice\\Dice.csproj": {
-              "projectPath": "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\Dice\\Dice.csproj"
+            "D:\\Coding\\C#\\dice\\Dice\\Dice.csproj": {
+              "projectPath": "D:\\Coding\\C#\\dice\\Dice\\Dice.csproj"
             }
           }
         }
@@ -1220,7 +1225,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.102\\RuntimeIdentifierGraph.json"
       }
     }
   }

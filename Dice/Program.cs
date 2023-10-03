@@ -1,13 +1,13 @@
 ﻿using Dice;
 
-var input = string.Join(" ", args);
+string input = string.Join(" ", args);
 Console.WriteLine($"Input: {input}");
 
-var tokens = new Tokenizer().Tokenize(input);
+Queue<IToken> tokens = new Tokenizer().Tokenize(input);
 
-var expression = Parser.Parse(tokens);
+IExpression expression = Parser.Parse(tokens);
 
-var diceResult = expression.Evaluate();
-var output = diceResult.Result + $" ({diceResult.Expression})";
+DiceResult diceResult = expression.Evaluate();
+string output = diceResult.Value + $" | {diceResult.Expression}";
 
 Console.WriteLine($"Output: {output}");

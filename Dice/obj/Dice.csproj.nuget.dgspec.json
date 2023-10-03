@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\Dice\\Dice.csproj": {}
+    "D:\\Coding\\C#\\dice\\Dice\\Dice.csproj": {}
   },
   "projects": {
-    "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\Dice\\Dice.csproj": {
+    "D:\\Coding\\C#\\dice\\Dice\\Dice.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\Dice\\Dice.csproj",
+        "projectUniqueName": "D:\\Coding\\C#\\dice\\Dice\\Dice.csproj",
         "projectName": "Dice",
-        "projectPath": "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\Dice\\Dice.csproj",
-        "packagesPath": "C:\\Users\\brage.ingebrigtsen\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\brage.ingebrigtsen\\RiderProjects\\Dice\\Dice\\obj\\",
+        "projectPath": "D:\\Coding\\C#\\dice\\Dice\\Dice.csproj",
+        "packagesPath": "C:\\Users\\Brage\\.nuget\\packages\\",
+        "outputPath": "D:\\Coding\\C#\\dice\\Dice\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\brage.ingebrigtsen\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Brage\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -55,7 +59,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.401\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.102\\RuntimeIdentifierGraph.json"
         }
       }
     }

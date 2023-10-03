@@ -6,7 +6,7 @@ public class Tokenizer
 
     public Queue<IToken> Tokenize(string expression)
     {
-        var chars = expression.Reverse().ToStack();
+        Stack<char> chars = expression.Reverse().ToStack();
 
         while (chars.TryPeek(out char c))
         {
@@ -25,11 +25,11 @@ public class Tokenizer
                     chars.Pop();
                     break;
 
-                case Tokens.ADD or Tokens.SUB or Tokens.MUL or Tokens.DIV or Tokens.MOD:
+                case Tokens.ADD or Tokens.SUB or Tokens.MUL or Tokens.DIV:
                     _tokens.Enqueue(new OperatorToken(chars.Pop()));
                     break;
                 
-                case var _ when Tokens.KEEP.Contains(c):
+                case var _ when Tokens.Keep.Contains(c):
                     _tokens.Enqueue(new KeepToken(c));
                     chars.Pop();
                     break;
@@ -39,15 +39,38 @@ public class Tokenizer
                     chars.Pop();
                     break;
                 
-                case var _ when Tokens.HIGHEST.Contains(c):
+                case var _ when Tokens.Highest.Contains(c):
                     _tokens.Enqueue(new HighestToken(c));
                     chars.Pop();
                     break;
                 
-                case var _ when Tokens.LOWEST.Contains(c):
+                case var _ when Tokens.Lowest.Contains(c):
                     _tokens.Enqueue(new LowestToken(c));
                     chars.Pop();
                     break;
+                
+                case Tokens.PERCENTILE:
+                    _tokens.Enqueue(new NumberToken(100));
+                    chars.Pop();
+                    break;
+                
+                case Tokens.EXPLODE:
+                    _tokens.Enqueue(new ExplodeToken());
+                    chars.Pop();
+                    break;
+                
+                case Tokens.OPEN_PAREN:
+                    _tokens.Enqueue(new OpenParenToken());
+                    chars.Pop();
+                    break;
+                
+                case Tokens.CLOSE_PAREN:
+                    _tokens.Enqueue(new CloseParenToken());
+                    chars.Pop();
+                    break;
+                
+                default:
+                    throw new InvalidDataException($"Unexpected character: {c}");
             }
 
             continue;
@@ -55,7 +78,7 @@ public class Tokenizer
             void ParseNumber()
             {
                 string number = string.Empty;
-
+                
                 while (chars.TryPeek(out char c) && char.IsDigit(c))
                     number += chars.Pop();
 
@@ -70,7 +93,7 @@ public class Tokenizer
     
     private static bool IsDiceOperator(char c, Stack<char> chars)
     {
-        if (!Tokens.DICE_OPERATORS.Contains(c))
+        if (!Tokens.DiceOperators.Contains(c))
             return false;
 
         chars.Pop();
@@ -82,12 +105,12 @@ public class Tokenizer
         }
         
         chars.Push(c);
-        return !Tokens.HIGHEST.Contains(next) && !Tokens.LOWEST.Contains(next);
+        return !Tokens.Highest.Contains(next) && !Tokens.Lowest.Contains(next);
     }
 
     private static bool IsDropOperator(char c, Stack<char> chars)
     {
-        if (!Tokens.DROP.Contains(c))
+        if (!Tokens.Drop.Contains(c))
             return false;
 
         chars.Pop();
@@ -99,7 +122,7 @@ public class Tokenizer
         }
         
         chars.Push(c);
-        return Tokens.HIGHEST.Contains(next) || Tokens.LOWEST.Contains(next);
+        return Tokens.Highest.Contains(next) || Tokens.Lowest.Contains(next);
     }
 }
 
@@ -143,6 +166,21 @@ public record LowestToken(char Symbol) : IToken
     public string Value => Symbol.ToString();
 }
 
+public record ExplodeToken : IToken
+{
+    public string Value => Tokens.EXPLODE.ToString();
+}
+
+public record OpenParenToken : IToken
+{
+    public string Value => Tokens.OPEN_PAREN.ToString();
+}
+
+public record CloseParenToken : IToken
+{
+    public string Value => Tokens.CLOSE_PAREN.ToString();
+}
+
 public static class EnumerableExtensions
 {
     public static Stack<T> ToStack<T>(this IEnumerable<T> collection)
@@ -154,17 +192,18 @@ public static class EnumerableExtensions
 
 public static class Tokens
 {
-    public static readonly char[] DICE_OPERATORS = { 'd', 'D' };
-    public static readonly char[] KEEP = { 'k', 'K' };
-    public static readonly char[] DROP = { 'd', 'D' };
-    public static readonly char[] HIGHEST = { 'h', 'H' };
-    public static readonly char[] LOWEST = { 'l', 'L' };
+    public static readonly char[] DiceOperators = { 'd', 'D' };
+    public static readonly char[] Keep = { 'k', 'K' };
+    public static readonly char[] Drop = { 'd', 'D' };
+    public static readonly char[] Highest = { 'h', 'H' };
+    public static readonly char[] Lowest = { 'l', 'L' };
+    public const char PERCENTILE = '%';
+    public const char EXPLODE = '!';
     
     public const char ADD = '+';
     public const char SUB = '-';
     public const char MUL = '*';
     public const char DIV = '/';
-    public const char MOD = '%';
-    // public const char OPEN_PAREN = '(';
-    // public const char CLOSE_PAREN = ')';
+    public const char OPEN_PAREN = '(';
+    public const char CLOSE_PAREN = ')';
 }
