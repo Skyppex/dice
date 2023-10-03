@@ -20,5 +20,5 @@ DiceResult diceResult = expression.Evaluate();
 float output = diceResult.Value;
 string expressionString = diceResult.Expression;
 
-Console.WriteLine($"Result: {output}");
 Console.WriteLine($"Expression: {expressionString}");
+Console.WriteLine($"Result: {output}");
