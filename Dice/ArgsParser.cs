@@ -1,8 +1,8 @@
 namespace Dice;
 
-public record Args(IEvaluationMode Mode, string Roll, bool PrintExpression)
+public record Args(IEvaluationMode Mode, string Roll, bool PrintExpression, bool SpeedTimer)
 {
-    public static readonly Args Empty = new Args(new NoEvaluation(), string.Empty, false);
+    public static readonly Args Empty = new(new NoEvaluation(), string.Empty, false, false);
 }
 
 public class ArgsParser
@@ -28,7 +28,7 @@ public class ArgsParser
             switch (arg)
             {
                 case "-h" or "-help" or "-?":
-                    return new Args(new NoEvaluation(), string.Empty, false);
+                    return Args.Empty;
 
                 case "-m" or "-mode":
                     if (argsContainer.Mode != null)
@@ -39,6 +39,10 @@ public class ArgsParser
                 
                 case "-e" or "-expression":
                     argsContainer.PrintExpression = true;
+                    break;
+                
+                case "-s":
+                    argsContainer.SpeedTimer = true;
                     break;
                 
                 case var _ when !arg.StartsWith('-'):
@@ -55,7 +59,7 @@ public class ArgsParser
         if (string.IsNullOrEmpty(argsContainer.Roll))
             throw new ArgumentException("No roll specified");
 
-        return new Args(argsContainer.Mode ?? new SingleEvaluation(), argsContainer.Roll, argsContainer.PrintExpression);
+        return new Args(argsContainer.Mode ?? new SingleEvaluation(), argsContainer.Roll, argsContainer.PrintExpression, argsContainer.SpeedTimer);
     }
 
     private IEvaluationMode? ParseModeArgs()
@@ -101,5 +105,6 @@ public class ArgsParser
         public IEvaluationMode? Mode { get; set; }
         public string Roll { get; set; } = string.Empty;
         public bool PrintExpression { get; set; }
+        public bool SpeedTimer { get; set; }
     }
 }

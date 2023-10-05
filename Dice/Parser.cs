@@ -250,12 +250,12 @@ public class Parser
 
 public interface IExpression
 {
-    public DiceResult Evaluate(IDiceRollHandler handler);
+    public DiceResult Evaluate(IDiceRollHandlers handler);
 }
 
 public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMode Mode) : IExpression
 {
-    public DiceResult Evaluate(IDiceRollHandler handler)
+    public DiceResult Evaluate(IDiceRollHandlers handler)
     {
         DiceResult diceResult = Mode.Evaluate(Amount, DiceRange, handler);
         return diceResult with { Expression = $"[{diceResult.Expression}]" };
@@ -282,12 +282,12 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
     {
         public IRollModifier[] RollModifiers { get; init; }
 
-        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler);
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler);
     }
 
     private record DefaultMode(IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
             DiceResultInt[] rolls = Enumerable.Range(1, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
@@ -301,7 +301,7 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
 
     private record KeepHighestMode(int Amount, IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
             DiceResultInt[] rolls = Enumerable.Range(0, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
@@ -321,7 +321,7 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
 
     private record KeepLowestMode(int Amount, IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
             DiceResultInt[] rolls = Enumerable.Range(0, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
@@ -341,7 +341,7 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
 
     private record DropHighestMode(int Amount, IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
             DiceResultInt[] rolls = Enumerable.Range(0, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
@@ -361,7 +361,7 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
 
     private record DropLowestMode(int Amount, IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
             DiceResultInt[] rolls = Enumerable.Range(0, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
@@ -382,12 +382,12 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
 
 public record NumberExpression(int Number) : IExpression
 {
-    public DiceResult Evaluate(IDiceRollHandler handler) => new(Number, Number.ToString());
+    public DiceResult Evaluate(IDiceRollHandlers handler) => new(Number, Number.ToString());
 }
 
 public record BinaryExpression(IExpression Left, char Operator, IExpression Right) : IExpression
 {
-    public DiceResult Evaluate(IDiceRollHandler handler)
+    public DiceResult Evaluate(IDiceRollHandlers handler)
     {
         DiceResult leftResult = Left.Evaluate(handler);
         DiceResult rightResult = Right.Evaluate(handler);
@@ -407,7 +407,7 @@ public record BinaryExpression(IExpression Left, char Operator, IExpression Righ
 
 public record ParenExpression(IExpression Expression) : IExpression
 {
-    public DiceResult Evaluate(IDiceRollHandler handler)
+    public DiceResult Evaluate(IDiceRollHandlers handler)
     {
         DiceResult diceResult = Expression.Evaluate(handler);
         return diceResult with { Expression = $"({diceResult.Expression})" };

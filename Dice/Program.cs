@@ -1,4 +1,5 @@
-﻿using Dice;
+﻿using System.Diagnostics;
+using Dice;
 
 string dice = "";
 
@@ -8,6 +9,11 @@ Console.WriteLine($"Input: {dice}");
 
 Args parsedArgs = new ArgsParser(args).ParseArgs();
 
+Stopwatch? stopwatch = null;
+
+if (parsedArgs.SpeedTimer)
+    stopwatch = Stopwatch.StartNew();
+
 if (parsedArgs == Args.Empty)
 {
     Help.Print();
@@ -15,14 +21,17 @@ if (parsedArgs == Args.Empty)
 }
 
 DiceResult diceResult = parsedArgs.Mode.Evaluate(parsedArgs.Roll);
-PrintResults(diceResult.Value, parsedArgs.PrintExpression ? diceResult.Expression : string.Empty);
+PrintResults(diceResult.Value, parsedArgs.PrintExpression ? diceResult.Expression : string.Empty, stopwatch);
 
 return;
 
-static void PrintResults(float result, string expressionString)
+static void PrintResults(float result, string expressionString, Stopwatch? stopwatch)
 {
     if (!string.IsNullOrEmpty(expressionString))
         Console.WriteLine($"Expression: {expressionString}");
         
     Console.WriteLine($"Result: {result}");
+
+    if (stopwatch != null)
+        Console.WriteLine($"\nSpeed: {stopwatch.ElapsedMilliseconds}ms");
 }

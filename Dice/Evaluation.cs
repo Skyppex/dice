@@ -1,3 +1,7 @@
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
 namespace Dice;
 
 public interface IEvaluationMode
@@ -7,7 +11,8 @@ public interface IEvaluationMode
 
 public record NoEvaluation : IEvaluationMode
 {
-    public DiceResult Evaluate(string roll) => throw new NotSupportedException();
+    public DiceResult Evaluate(string roll) =>
+        throw new NotSupportedException("Cannot evaluate with no evaluation mode.");
 }
 
 public record SingleEvaluation : IEvaluationMode
@@ -26,24 +31,13 @@ public record SimulatedAverageEvaluation(int Iterations) : IEvaluationMode
     {
         Queue<IToken> tokens = new Tokenizer().Tokenize(roll);
         IExpression expression = Parser.Parse(tokens);
-        
-         // float total = 0;
-         List<DiceResult> diceResults = new();
 
-         Parallel.For(0, Iterations, _ =>
-         {
-            DiceResult diceResult = expression.Evaluate(new RandomRollHandler(Random.Shared));
-            diceResults.Add(diceResult);
-         });
-         
-         float total
-         // for (int i = 0; i < Iterations; i++)
-         // {
-         //     DiceResult diceResult = expression.Evaluate(new RandomRollHandler(Random.Shared));
-         //     total += diceResult.Value;
-         // }
-         
-         return new DiceResult(total / Iterations, $"Rolled ({roll}) {Iterations} times and took the average.");
+        float average = Enumerable.Range(0, Iterations)
+            .AsParallel()
+            .Select(_ => expression.Evaluate(new RandomRollHandler(Random.Shared)))
+            .Average(dr => dr.Value);
+        
+        return new DiceResult(average, $"Rolled ({roll}) {Iterations} times and took the average.");
     }
 }
 

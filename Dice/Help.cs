@@ -14,7 +14,7 @@ public static class Help
         builder.AppendLine(WriteExplanation("-e, -expression", "Print the expression used to calculate the result"));
         builder.AppendLine(WriteExplanation("-m, -mode", "Specify the evaluation mode"));
         builder.AppendLine(WriteExplanation("    default", "Evaluate the expression once with random rolls"));
-        builder.AppendLine(WriteExplanation("    avg:<iterations>", "Evaluate the expression <iterations> times and average the results"));
+        builder.AppendLine(WriteExplanation("    avg:<iterations>", "Evaluate the expression <iterations> times and average the results (simulated average)"));
         builder.AppendLine(WriteExplanation("    max", "Evaluate the expression once with the maximum possible rolls"));
         builder.AppendLine(WriteExplanation("    min", "Evaluate the expression once with the minimum possible rolls"));
         builder.AppendLine(WriteExplanation("    med, -m median", "Evaluate the expression once with the median of each roll"));

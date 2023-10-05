@@ -1,40 +1,8 @@
 ﻿namespace Dice;
 
-public interface IDiceRollHandler
-{
-    public int Handle(DiceRange diceRange);
-}
-
-public record RandomRollHandler(Random Random) : IDiceRollHandler
-{
-    public int Handle(DiceRange diceRange) => Random.Next(diceRange.Min, diceRange.Max + 1);
-}
-
-public record MaxRollHandler : IDiceRollHandler
-{
-    public int Handle(DiceRange diceRange) => diceRange.Max;
-}
-
-public record MinRollHandler : IDiceRollHandler
-{
-    public int Handle(DiceRange diceRange) => diceRange.Min;
-}
-
-public record MedianRollHandler : IDiceRollHandler
-{
-    public int Handle(DiceRange diceRange) => (diceRange.Min + diceRange.Max) / 2;
-}
-
-/// <param name="Min">Inclusive</param>
-/// <param name="Max">Inclusive</param>
-public readonly record struct DiceRange(int Min, int Max)
-{
-    public static implicit operator DiceRange((int Min, int Max) tuple) => new(tuple.Min, tuple.Max);
-}
-
 public readonly record struct DiceRoll(DiceRange DiceRange, params IRollModifier[] RollModifiers)
 {
-    public DiceResultInt Roll(IDiceRollHandler handler)
+    public DiceResultInt Roll(IDiceRollHandlers handler)
     {
         List<int> rolls = new();
         List<DiceResultInt> diceResults = new();
@@ -59,12 +27,12 @@ public readonly record struct DiceRoll(DiceRange DiceRange, params IRollModifier
 
 public interface IRollModifier
 {
-    public DiceResultInt Modify(int total, DiceRange diceRange, List<int> rolls, IDiceRollHandler handler);
+    public DiceResultInt Modify(int total, DiceRange diceRange, List<int> rolls, IDiceRollHandlers handler);
 }
 
 public record ExplodeModifier(int MaxExplosions = 1) : IRollModifier
 {
-    public DiceResultInt Modify(int total, DiceRange diceRange, List<int> rolls, IDiceRollHandler handler)
+    public DiceResultInt Modify(int total, DiceRange diceRange, List<int> rolls, IDiceRollHandlers handler)
     {
         int newTotal = ModifyRecurse(total, diceRange, total, rolls, handler);
 
@@ -73,7 +41,7 @@ public record ExplodeModifier(int MaxExplosions = 1) : IRollModifier
             : new DiceResultInt(newTotal, $"({string.Join(", ", rolls.Select(r => $"{r}!").Take(rolls.Count - 1))}, {rolls.Last()})");
     }
 
-    private int ModifyRecurse(int total, DiceRange diceRange, int previousRoll, List<int> rolls, IDiceRollHandler handler)
+    private int ModifyRecurse(int total, DiceRange diceRange, int previousRoll, List<int> rolls, IDiceRollHandlers handler)
     {
         if (MaxExplosions is 0)
             return total;
