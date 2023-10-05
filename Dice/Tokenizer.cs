@@ -17,7 +17,7 @@ public class Tokenizer
                     break;
                 
                 case var _ when char.IsDigit(c):
-                    ParseNumber();
+                    ParseNumber(chars);
                     break;
 
                 case var _ when IsDiceOperator(c, chars):
@@ -72,21 +72,19 @@ public class Tokenizer
                 default:
                     throw new InvalidDataException($"Unexpected character: {c}");
             }
-
-            continue;
-
-            void ParseNumber()
-            {
-                string number = string.Empty;
-                
-                while (chars.TryPeek(out char c) && char.IsDigit(c))
-                    number += chars.Pop();
-
-                _tokens.Enqueue(new NumberToken(int.Parse(number)));
-            }
         }
 
         return _tokens;
+    }
+
+    private void ParseNumber(Stack<char> chars)
+    {
+        string number = string.Empty;
+                
+        while (chars.TryPeek(out char c) && char.IsDigit(c))
+            number += chars.Pop();
+
+        _tokens.Enqueue(new NumberToken(int.Parse(number)));
     }
 
     private static bool IsSkippable(char c) => c is ' ' or '\t' or '\n' or '\r';

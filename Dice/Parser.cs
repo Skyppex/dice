@@ -9,7 +9,13 @@ public class Parser
     public static IExpression Parse(Queue<IToken> tokens)
     {
         var parser = new Parser(tokens);
-        return parser.ParseExpression();
+        var expression = parser.ParseExpression();
+        
+        if (parser._tokens.Count != 0)
+            Console.WriteLine($"Found unexpected tokens at the end of the expression: {string.Join("", parser._tokens.Select(t => t.Value))}\n" +
+                              $"Will evaluate excluding the unexpected tokens.");
+        
+        return expression;
     }
 
     private IExpression ParseExpression() => ParseAdditive();
@@ -78,32 +84,33 @@ public class Parser
         _tokens.Dequeue();
 
         var secondNumberToken = Expect<NumberToken>("Expected number after d");
+        var diceRange = (1, secondNumberToken.Number);
 
         List<IRollModifier> rollModifiers = ParseRollModifiers();
-
+        
         if (!_tokens.TryPeek(out IToken? nextToken))
-            return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.Default(rollModifiers.ToArray()));
+            return new DiceExpression(numberToken.Number, diceRange, DiceExpression.Modes.Default(rollModifiers.ToArray()));
 
         switch (nextToken)
         {
             case KeepToken:
             {
                 _tokens.Dequeue();
-                return ParseKeep(numberToken, secondNumberToken, rollModifiers);
+                return ParseKeep(numberToken, diceRange, rollModifiers);
             }
 
             case DropToken:
             {
                 _tokens.Dequeue();
 
-                if (ParseDrop(numberToken, secondNumberToken, rollModifiers, out IExpression? dropExpression))
+                if (ParseDrop(numberToken, diceRange, rollModifiers, out IExpression? dropExpression))
                     return dropExpression!;
 
                 break;
             }
         }
 
-        return new DiceExpression(numberToken.Number, secondNumberToken.Number, DiceExpression.Modes.Default(rollModifiers.ToArray()));
+        return new DiceExpression(numberToken.Number, diceRange, DiceExpression.Modes.Default(rollModifiers.ToArray()));
     }
 
     private List<IRollModifier> ParseRollModifiers()
@@ -137,7 +144,7 @@ public class Parser
         return rollModifiers;
     }
 
-    private IExpression ParseKeep(NumberToken numberToken, NumberToken secondNumberToken, List<IRollModifier> rollModifiers)
+    private IExpression ParseKeep(NumberToken numberToken, DiceRange diceRange, List<IRollModifier> rollModifiers)
     {
         if (_tokens.TryPeek(out IToken? nextNextToken))
         {
@@ -148,7 +155,7 @@ public class Parser
                     _tokens.Dequeue();
                     NumberToken amount = ExpectOrElse(() => new NumberToken(1));
 
-                    return new DiceExpression(numberToken.Number, secondNumberToken.Number,
+                    return new DiceExpression(numberToken.Number, diceRange,
                         DiceExpression.Modes.KeepLowest(amount.Number, rollModifiers.ToArray()));
                 }
 
@@ -158,7 +165,7 @@ public class Parser
                     NumberToken amount = ExpectOrElse(() => new NumberToken(1));
 
 
-                    return new DiceExpression(numberToken.Number, secondNumberToken.Number,
+                    return new DiceExpression(numberToken.Number, diceRange,
                         DiceExpression.Modes.KeepHighest(amount.Number, rollModifiers.ToArray()));
                 }
 
@@ -166,17 +173,17 @@ public class Parser
                 {
                     NumberToken amount = ExpectOrElse(() => new NumberToken(1));
 
-                    return new DiceExpression(numberToken.Number, secondNumberToken.Number,
+                    return new DiceExpression(numberToken.Number, diceRange,
                         DiceExpression.Modes.KeepHighest(amount.Number, rollModifiers.ToArray()));
                 }
             }
         }
 
-        return new DiceExpression(numberToken.Number, secondNumberToken.Number,
+        return new DiceExpression(numberToken.Number, diceRange,
             DiceExpression.Modes.KeepHighest(1, rollModifiers.ToArray()));
     }
 
-    private bool ParseDrop(NumberToken numberToken, NumberToken secondNumberToken, List<IRollModifier> rollModifiers, out IExpression? dropExpression)
+    private bool ParseDrop(NumberToken numberToken, DiceRange diceRange, List<IRollModifier> rollModifiers, out IExpression? dropExpression)
     {
         if (_tokens.TryPeek(out IToken? nextNextToken))
         {
@@ -187,7 +194,7 @@ public class Parser
                     _tokens.Dequeue();
                     NumberToken amount = ExpectOrElse(() => new NumberToken(1));
 
-                    dropExpression = new DiceExpression(numberToken.Number, secondNumberToken.Number,
+                    dropExpression = new DiceExpression(numberToken.Number, diceRange,
                         DiceExpression.Modes.DropHighest(amount.Number, rollModifiers.ToArray()));
 
                     return true;
@@ -198,7 +205,7 @@ public class Parser
                     _tokens.Dequeue();
                     NumberToken amount = ExpectOrElse(() => new NumberToken(1));
 
-                    dropExpression = new DiceExpression(numberToken.Number, secondNumberToken.Number,
+                    dropExpression = new DiceExpression(numberToken.Number, diceRange,
                         DiceExpression.Modes.DropLowest(amount.Number, rollModifiers.ToArray()));
 
                     return true;
@@ -243,14 +250,14 @@ public class Parser
 
 public interface IExpression
 {
-    public DiceResult Evaluate();
+    public DiceResult Evaluate(IDiceRollHandler handler);
 }
 
-public record DiceExpression(int Amount, int Dice, DiceExpression.IMode Mode) : IExpression
+public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMode Mode) : IExpression
 {
-    public DiceResult Evaluate()
+    public DiceResult Evaluate(IDiceRollHandler handler)
     {
-        DiceResult diceResult = Mode.Evaluate(Amount, Dice);
+        DiceResult diceResult = Mode.Evaluate(Amount, DiceRange, handler);
         return diceResult with { Expression = $"[{diceResult.Expression}]" };
     }
 
@@ -275,17 +282,15 @@ public record DiceExpression(int Amount, int Dice, DiceExpression.IMode Mode) : 
     {
         public IRollModifier[] RollModifiers { get; init; }
 
-        public DiceResult Evaluate(int amount, int dice);
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler);
     }
 
     private record DefaultMode(IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, int dice)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
         {
-            Random rand = Random.Shared;
-
             DiceResultInt[] rolls = Enumerable.Range(1, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(rand))
+                .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderByDescending(dr => dr.Value)
                 .ToArray();
 
@@ -296,12 +301,10 @@ public record DiceExpression(int Amount, int Dice, DiceExpression.IMode Mode) : 
 
     private record KeepHighestMode(int Amount, IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, int dice)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
         {
-            Random rand = Random.Shared;
-
             DiceResultInt[] rolls = Enumerable.Range(0, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(rand))
+                .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderByDescending(n => n.Value)
                 .ToArray();
 
@@ -318,12 +321,10 @@ public record DiceExpression(int Amount, int Dice, DiceExpression.IMode Mode) : 
 
     private record KeepLowestMode(int Amount, IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, int dice)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
         {
-            Random rand = Random.Shared;
-
             DiceResultInt[] rolls = Enumerable.Range(0, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(rand))
+                .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderBy(n => n)
                 .ToArray();
 
@@ -340,12 +341,10 @@ public record DiceExpression(int Amount, int Dice, DiceExpression.IMode Mode) : 
 
     private record DropHighestMode(int Amount, IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, int dice)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
         {
-            Random rand = Random.Shared;
-
             DiceResultInt[] rolls = Enumerable.Range(0, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(rand))
+                .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderByDescending(n => n)
                 .ToArray();
 
@@ -362,12 +361,10 @@ public record DiceExpression(int Amount, int Dice, DiceExpression.IMode Mode) : 
 
     private record DropLowestMode(int Amount, IRollModifier[] RollModifiers) : IMode
     {
-        public DiceResult Evaluate(int amount, int dice)
+        public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandler handler)
         {
-            Random rand = Random.Shared;
-
             DiceResultInt[] rolls = Enumerable.Range(0, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(rand))
+                .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderBy(n => n)
                 .ToArray();
 
@@ -385,15 +382,15 @@ public record DiceExpression(int Amount, int Dice, DiceExpression.IMode Mode) : 
 
 public record NumberExpression(int Number) : IExpression
 {
-    public DiceResult Evaluate() => new(Number, Number.ToString());
+    public DiceResult Evaluate(IDiceRollHandler handler) => new(Number, Number.ToString());
 }
 
 public record BinaryExpression(IExpression Left, char Operator, IExpression Right) : IExpression
 {
-    public DiceResult Evaluate()
+    public DiceResult Evaluate(IDiceRollHandler handler)
     {
-        DiceResult leftResult = Left.Evaluate();
-        DiceResult rightResult = Right.Evaluate();
+        DiceResult leftResult = Left.Evaluate(handler);
+        DiceResult rightResult = Right.Evaluate(handler);
 
         float result = Operator switch
         {
@@ -410,9 +407,9 @@ public record BinaryExpression(IExpression Left, char Operator, IExpression Righ
 
 public record ParenExpression(IExpression Expression) : IExpression
 {
-    public DiceResult Evaluate()
+    public DiceResult Evaluate(IDiceRollHandler handler)
     {
-        DiceResult diceResult = Expression.Evaluate();
+        DiceResult diceResult = Expression.Evaluate(handler);
         return diceResult with { Expression = $"({diceResult.Expression})" };
     }
 }

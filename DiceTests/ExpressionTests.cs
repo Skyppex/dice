@@ -11,10 +11,10 @@ public class ExpressionTests
         for (int i = 0; i < 1000; i++)
         {
             // Arrange
-            var expression = new DiceExpression(1, 20, DiceExpression.Modes.Default());
+            var expression = new DiceExpression(1, (1, 20), DiceExpression.Modes.Default());
             
             // Act
-            var result = expression.Evaluate();
+            var result = expression.Evaluate(new RandomRollHandler(Random.Shared));
             
             // Assert
             result.Value.Should().BeInRange(1f, 20f);
