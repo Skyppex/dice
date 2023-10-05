@@ -1,6 +1,6 @@
 namespace Dice;
 
-public record Args(IEvaluationMode Mode, string Roll, bool PrintExpression, bool SpeedTimer)
+public record Args(IEvaluationMode Mode, string Roll, bool PrintExpression, bool Timer)
 {
     public static readonly Args Empty = new(new NoEvaluation(), string.Empty, false, false);
 }
@@ -41,8 +41,8 @@ public class ArgsParser
                     argsContainer.PrintExpression = true;
                     break;
                 
-                case "-s":
-                    argsContainer.SpeedTimer = true;
+                case "-t" or "-time":
+                    argsContainer.Timer = true;
                     break;
                 
                 case var _ when !arg.StartsWith('-'):
@@ -59,7 +59,7 @@ public class ArgsParser
         if (string.IsNullOrEmpty(argsContainer.Roll))
             throw new ArgumentException("No roll specified");
 
-        return new Args(argsContainer.Mode ?? new SingleEvaluation(), argsContainer.Roll, argsContainer.PrintExpression, argsContainer.SpeedTimer);
+        return new Args(argsContainer.Mode ?? new SingleEvaluation(), argsContainer.Roll, argsContainer.PrintExpression, argsContainer.Timer);
     }
 
     private IEvaluationMode? ParseModeArgs()
@@ -108,6 +108,6 @@ public class ArgsParser
         public IEvaluationMode? Mode { get; set; }
         public string Roll { get; set; } = string.Empty;
         public bool PrintExpression { get; set; }
-        public bool SpeedTimer { get; set; }
+        public bool Timer { get; set; }
     }
 }

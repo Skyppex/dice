@@ -43,7 +43,7 @@ public class Parser
 
         while (_tokens.TryPeek(out IToken? nextToken) &&
                nextToken is OperatorToken operatorToken &&
-               operatorToken.Operator is Tokens.MUL or Tokens.DIV)
+               operatorToken.Operator is Tokens.MUL or Tokens.DIV or Tokens.MOD)
         {
             _tokens.Dequeue();
             IExpression right = ParsePrimary();
@@ -419,6 +419,7 @@ public record BinaryExpression(IExpression Left, char Operator, IExpression Righ
             Tokens.SUB => leftResult.Value - rightResult.Value,
             Tokens.MUL => leftResult.Value * rightResult.Value,
             Tokens.DIV => leftResult.Value / rightResult.Value,
+            Tokens.MOD => leftResult.Value % rightResult.Value,
             _ => throw new Exception($"Unexpected operator: {Operator}")
         };
 

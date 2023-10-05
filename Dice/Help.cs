@@ -13,7 +13,7 @@ public static class Help
         builder.AppendLine(WriteExplanation("-h, -help, -?", "Print this help message"));
         builder.AppendLine(WriteExplanation("-e, -expression", "Print the expression used to calculate the result"));
         builder.AppendLine(WriteExplanation("-m, -mode", "Specify the evaluation mode"));
-        builder.AppendLine(WriteExplanation("    default", "Evaluate the expression once with random rolls"));
+        builder.AppendLine(WriteExplanation("-t, -time", "Print the time it took to calculate the result"));
         builder.AppendLine(WriteExplanation("    simavg:<iterations>", "Evaluate the expression <iterations> times and average the results (simulated average)"));
         builder.AppendLine(WriteExplanation("    avg, average", "Evaluate the expression once with the average of each roll"));
         builder.AppendLine(WriteExplanation("    max", "Evaluate the expression once with the maximum possible rolls"));
@@ -22,6 +22,7 @@ public static class Help
         builder.AppendLine();
         builder.AppendLine("Make a dice roll:");
         builder.AppendLine(WriteExplanation("<rolls>d<sides>", "Roll <rolls> dice with <sides> sides and sum them together -> 4d6"));
+        builder.AppendLine(WriteExplanation("<rolls>d[<min>,<max>]", "Roll <rolls> dice with <min> to <max> sides and sum them together -> 4d[1,6]"));
         builder.AppendLine();
         builder.AppendLine("Modifiers:");
         builder.AppendLine(WriteExplanation("k[<keep>]", "Keep the highest <keep> (default 1) -> 4d6k3"));
@@ -29,7 +30,6 @@ public static class Help
         builder.AppendLine(WriteExplanation("dh[<drop>]", "Drop the highest <drop> (default 1) -> 4d6dh3"));
         builder.AppendLine(WriteExplanation("dl[<drop>]", "Drop the highest <drop> (default 1) -> 4d6dl3"));
         builder.AppendLine(WriteExplanation("![<explode>]", "Explode dice up to <explode> number of times (default 1) -> 4d6!3"));
-        builder.AppendLine(WriteExplanation("%", "Replaced by the number 100 (useful for percentile dice) -> 1d%"));
         builder.AppendLine();
         builder.AppendLine("Basic math operators:");
         builder.AppendLine(WriteExplanation("+", "Addition -> 1d6 + 1d6 + 2"));

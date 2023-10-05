@@ -5,7 +5,7 @@ Args parsedArgs = new ArgsParser(args).ParseArgs();
 
 Stopwatch? stopwatch = null;
 
-if (parsedArgs.SpeedTimer)
+if (parsedArgs.Timer)
     stopwatch = Stopwatch.StartNew();
 
 if (parsedArgs == Args.Empty)
@@ -27,5 +27,5 @@ static void PrintResults(float result, string expressionString, Stopwatch? stopw
     Console.WriteLine($"Result: {result}");
 
     if (stopwatch != null)
-        Console.WriteLine($"\nSpeed: {stopwatch.ElapsedMilliseconds}ms");
+        Console.WriteLine($"Time: {stopwatch.ElapsedMilliseconds}ms");
 }

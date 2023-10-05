@@ -25,7 +25,7 @@ public class Tokenizer
                     chars.Pop();
                     break;
 
-                case Tokens.ADD or Tokens.SUB or Tokens.MUL or Tokens.DIV:
+                case Tokens.ADD or Tokens.SUB or Tokens.MUL or Tokens.DIV or Tokens.MOD:
                     _tokens.Enqueue(new OperatorToken(chars.Pop()));
                     break;
                 
@@ -46,11 +46,6 @@ public class Tokenizer
                 
                 case var _ when Tokens.Lowest.Contains(c):
                     _tokens.Enqueue(new LowestToken(c));
-                    chars.Pop();
-                    break;
-                
-                case Tokens.PERCENTILE:
-                    _tokens.Enqueue(new NumberToken(100));
                     chars.Pop();
                     break;
                 
@@ -225,13 +220,13 @@ public static class Tokens
     public static readonly char[] Drop = { 'd', 'D' };
     public static readonly char[] Highest = { 'h', 'H' };
     public static readonly char[] Lowest = { 'l', 'L' };
-    public const char PERCENTILE = '%';
     public const char EXPLODE = '!';
     
     public const char ADD = '+';
     public const char SUB = '-';
     public const char MUL = '*';
     public const char DIV = '/';
+    public const char MOD = '%';
     public const char OPEN_PAREN = '(';
     public const char CLOSE_PAREN = ')';
     public const char OPEN_BRACKET = '[';
