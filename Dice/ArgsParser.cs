@@ -68,7 +68,7 @@ public class ArgsParser
 
         switch (arg)
         {
-            case var _ when arg.StartsWith("avg") || arg.StartsWith("average"):
+            case var _ when arg.StartsWith("simavg"):
             {
                 int indexOfColon = arg.IndexOf(':');
                 int iterations;
@@ -85,6 +85,9 @@ public class ArgsParser
                 
                 return new SimulatedAverageEvaluation(iterations);
             }
+
+            case "avg" or "average":
+                return new CalculatedAverageEvaluation();
             
             case "max":
                 return new MaximumEvaluation();

@@ -83,8 +83,7 @@ public class Parser
     {
         _tokens.Dequeue();
 
-        var secondNumberToken = Expect<NumberToken>("Expected number after d");
-        var diceRange = (1, secondNumberToken.Number);
+        var diceRange = ParseDiceRange();
 
         List<IRollModifier> rollModifiers = ParseRollModifiers();
         
@@ -111,6 +110,30 @@ public class Parser
         }
 
         return new DiceExpression(numberToken.Number, diceRange, DiceExpression.Modes.Default(rollModifiers.ToArray()));
+    }
+    
+    private DiceRange ParseDiceRange()
+    {
+        if (!_tokens.TryPeek(out IToken? nextToken))
+            throw new Exception("Unexpected end of tokens");
+
+        if (nextToken is NumberToken numberToken)
+        {
+            _tokens.Dequeue();
+            return new DiceRange(1, numberToken.Number);
+        }
+        
+        if (nextToken is OpenBracketToken)
+        {
+            _tokens.Dequeue();
+            var minToken = Expect<NumberToken>("Expected number");
+            Expect<DelimiterToken>("Expected ,");
+            var maxToken = Expect<NumberToken>("Expected number");
+            Expect<CloseBracketToken>("Expected ]");
+            return new DiceRange(minToken.Number, maxToken.Number);
+        }
+
+        throw new Exception($"Unexpected token: {nextToken.Value}");
     }
 
     private List<IRollModifier> ParseRollModifiers()
@@ -280,8 +303,6 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
 
     public interface IMode
     {
-        public IRollModifier[] RollModifiers { get; init; }
-
         public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler);
     }
 
@@ -289,12 +310,12 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
     {
         public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
-            DiceResultInt[] rolls = Enumerable.Range(1, amount)
+            DiceResult[] rolls = Enumerable.Range(1, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderByDescending(dr => dr.Value)
                 .ToArray();
 
-            int total = rolls.Select(r => r.Value).Sum();
+            float total = rolls.Select(r => r.Value).Sum();
             return new DiceResult(total, string.Join(", ", rolls.Select(r => r.Expression)));
         }
     }
@@ -303,12 +324,12 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
     {
         public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
-            DiceResultInt[] rolls = Enumerable.Range(0, amount)
+            DiceResult[] rolls = Enumerable.Range(0, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderByDescending(n => n.Value)
                 .ToArray();
 
-            int total = rolls
+            float total = rolls
                 .Take(Amount)
                 .Select(r => r.Value)
                 .Sum();
@@ -323,12 +344,12 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
     {
         public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
-            DiceResultInt[] rolls = Enumerable.Range(0, amount)
+            DiceResult[] rolls = Enumerable.Range(0, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderBy(n => n)
                 .ToArray();
 
-            int total = rolls
+            float total = rolls
                 .Take(Amount)
                 .Select(r => r.Value)
                 .Sum();
@@ -343,12 +364,12 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
     {
         public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
-            DiceResultInt[] rolls = Enumerable.Range(0, amount)
+            DiceResult[] rolls = Enumerable.Range(0, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderByDescending(n => n)
                 .ToArray();
 
-            int total = rolls
+            float total = rolls
                 .Skip(Amount)
                 .Select(r => r.Value)
                 .Sum();
@@ -363,12 +384,12 @@ public record DiceExpression(int Amount, DiceRange DiceRange, DiceExpression.IMo
     {
         public DiceResult Evaluate(int amount, DiceRange diceRange, IDiceRollHandlers handler)
         {
-            DiceResultInt[] rolls = Enumerable.Range(0, amount)
+            DiceResult[] rolls = Enumerable.Range(0, amount)
                 .Select(_ => new DiceRoll(diceRange, RollModifiers).Roll(handler))
                 .OrderBy(n => n)
                 .ToArray();
 
-            int total = rolls
+            float total = rolls
                 .Skip(Amount)
                 .Select(r => r.Value)
                 .Sum();

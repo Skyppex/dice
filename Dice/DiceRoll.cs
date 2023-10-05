@@ -2,17 +2,17 @@
 
 public readonly record struct DiceRoll(DiceRange DiceRange, params IRollModifier[] RollModifiers)
 {
-    public DiceResultInt Roll(IDiceRollHandlers handler)
+    public DiceResult Roll(IDiceRollHandlers handler)
     {
-        List<int> rolls = new();
-        List<DiceResultInt> diceResults = new();
+        List<float> rolls = new();
+        List<DiceResult> diceResults = new();
 
-        int total = handler.Handle(DiceRange);
+        float total = handler.Handle(DiceRange);
         rolls.Add(total);
 
         foreach (IRollModifier t in RollModifiers)
         {
-            DiceResultInt diceResult = t.Modify(total, DiceRange, rolls, handler);
+            DiceResult diceResult = t.Modify(total, DiceRange, rolls, handler);
             diceResults.Add(diceResult);
             total = diceResult.Value;
         }
@@ -21,39 +21,52 @@ public readonly record struct DiceRoll(DiceRange DiceRange, params IRollModifier
             ? $"{string.Join(", ", diceResults.Select(dr => dr.Expression))}"
             : $"{total.ToString()}";
         
-        return new DiceResultInt(total, expression);
+        return new DiceResult(total, expression);
     }
 }
 
 public interface IRollModifier
 {
-    public DiceResultInt Modify(int total, DiceRange diceRange, List<int> rolls, IDiceRollHandlers handler);
+    public DiceResult Modify(float total, DiceRange diceRange, List<float> rolls, IDiceRollHandlers handler);
 }
 
 public record ExplodeModifier(int MaxExplosions = 1) : IRollModifier
 {
-    public DiceResultInt Modify(int total, DiceRange diceRange, List<int> rolls, IDiceRollHandlers handler)
+    public DiceResult Modify(float total, DiceRange diceRange, List<float> rolls, IDiceRollHandlers handler)
     {
-        int newTotal = ModifyRecurse(total, diceRange, total, rolls, handler);
+        float newTotal = ModifyRecurse(total, diceRange, total, rolls, handler);
 
         return rolls.Count <= 1
-            ? new DiceResultInt(newTotal, $"{rolls.Single()}")
-            : new DiceResultInt(newTotal, $"({string.Join(", ", rolls.Select(r => $"{r}!").Take(rolls.Count - 1))}, {rolls.Last()})");
+            ? new DiceResult(newTotal, $"{rolls.Single()}")
+            : new DiceResult(newTotal, $"({string.Join(", ", rolls.Select(r => $"{r}!").Take(rolls.Count - 1))}, {rolls.Last()})");
     }
 
-    private int ModifyRecurse(int total, DiceRange diceRange, int previousRoll, List<int> rolls, IDiceRollHandlers handler)
+    private float ModifyRecurse(
+        float total,
+        DiceRange diceRange,
+        float previousRoll,
+        List<float> rolls,
+        IDiceRollHandlers handler)
     {
         if (MaxExplosions is 0)
             return total;
         
         if (previousRoll == diceRange.Max)
-        {
-            int explosion = handler.Handle(diceRange);
-            total += explosion;
-            rolls.Add(explosion);
-            return new ExplodeModifier(MaxExplosions - 1).ModifyRecurse(total, diceRange, explosion, rolls, handler);
-        }
+            return HandleRoll(1f);
+
+        if (handler.ExhaustiveRoll)
+            return HandleRoll(MathF.Pow(1f / diceRange.Sides, rolls.Count));
 
         return total;
+
+        float HandleRoll(float multiplier)
+        {
+            float explosion = multiplier * handler.Handle(diceRange);
+            total += explosion;
+            rolls.Add(explosion);
+
+            return new ExplodeModifier(MaxExplosions - 1)
+                .ModifyRecurse(total, diceRange, explosion, rolls, handler);
+        }
     }
 }

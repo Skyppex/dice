@@ -25,6 +25,16 @@ public record SingleEvaluation : IEvaluationMode
     }
 }
 
+public record CalculatedAverageEvaluation : IEvaluationMode
+{
+    public DiceResult Evaluate(string roll)
+    {
+        Queue<IToken> tokens = new Tokenizer().Tokenize(roll);
+        IExpression expression = Parser.Parse(tokens);
+        return expression.Evaluate(new AverageRollHandler());
+    }
+}
+
 public record SimulatedAverageEvaluation(int Iterations) : IEvaluationMode
 {
     public DiceResult Evaluate(string roll)

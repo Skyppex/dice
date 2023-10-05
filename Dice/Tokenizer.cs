@@ -69,6 +69,21 @@ public class Tokenizer
                     chars.Pop();
                     break;
                 
+                case Tokens.OPEN_BRACKET:
+                    _tokens.Enqueue(new OpenBracketToken());
+                    chars.Pop();
+                    break;
+                
+                case Tokens.CLOSE_BRACKET:
+                    _tokens.Enqueue(new CloseBracketToken());
+                    chars.Pop();
+                    break;
+                
+                case Tokens.DELIMITER:
+                    _tokens.Enqueue(new DelimiterToken());
+                    chars.Pop();
+                    break;
+                
                 default:
                     throw new InvalidDataException($"Unexpected character: {c}");
             }
@@ -179,6 +194,21 @@ public record CloseParenToken : IToken
     public string Value => Tokens.CLOSE_PAREN.ToString();
 }
 
+public record OpenBracketToken : IToken
+{
+    public string Value => Tokens.OPEN_BRACKET.ToString();
+}
+
+public record CloseBracketToken : IToken
+{
+    public string Value => Tokens.CLOSE_BRACKET.ToString();
+}
+
+public record DelimiterToken : IToken
+{
+    public string Value => Tokens.DELIMITER.ToString();
+}
+
 public static class EnumerableExtensions
 {
     public static Stack<T> ToStack<T>(this IEnumerable<T> collection)
@@ -204,4 +234,8 @@ public static class Tokens
     public const char DIV = '/';
     public const char OPEN_PAREN = '(';
     public const char CLOSE_PAREN = ')';
+    public const char OPEN_BRACKET = '[';
+    public const char CLOSE_BRACKET = ']';
+    
+    public const char DELIMITER = ',';
 }
