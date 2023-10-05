@@ -1,12 +1,6 @@
 ﻿using System.Diagnostics;
 using Dice;
 
-string dice = "";
-
-#if DEBUG
-Console.WriteLine($"Input: {dice}");
-#endif
-
 Args parsedArgs = new ArgsParser(args).ParseArgs();
 
 Stopwatch? stopwatch = null;
