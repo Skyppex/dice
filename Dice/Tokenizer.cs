@@ -29,26 +29,6 @@ public class Tokenizer
                     _tokens.Enqueue(new OperatorToken(chars.Pop()));
                     break;
                 
-                case var _ when Tokens.Keep.Contains(c):
-                    _tokens.Enqueue(new KeepToken(c));
-                    chars.Pop();
-                    break;
-                
-                case var _ when IsDropOperator(c, chars):
-                    _tokens.Enqueue(new DropToken(c));
-                    chars.Pop();
-                    break;
-                
-                case var _ when Tokens.Highest.Contains(c):
-                    _tokens.Enqueue(new HighestToken(c));
-                    chars.Pop();
-                    break;
-                
-                case var _ when Tokens.Lowest.Contains(c):
-                    _tokens.Enqueue(new LowestToken(c));
-                    chars.Pop();
-                    break;
-                
                 case Tokens.EXPLODE:
                     _tokens.Enqueue(new ExplodeToken());
                     chars.Pop();
@@ -78,9 +58,39 @@ public class Tokenizer
                     _tokens.Enqueue(new DelimiterToken());
                     chars.Pop();
                     break;
+
+                case var _ when Tokens.Keep.Contains(c):
+                    _tokens.Enqueue(new KeepToken(c));
+                    chars.Pop();
+                    break;
+                
+                case var _ when IsDropOperator(c, chars):
+                    _tokens.Enqueue(new DropToken(c));
+                    chars.Pop();
+                    break;
+                
+                case var _ when Tokens.Highest.Contains(c):
+                    _tokens.Enqueue(new HighestToken(c));
+                    chars.Pop();
+                    break;
+                
+                case var _ when Tokens.Lowest.Contains(c):
+                    _tokens.Enqueue(new LowestToken(c));
+                    chars.Pop();
+                    break;
+                
+                case var _ when Tokens.Infinite.Contains(c):
+                    _tokens.Enqueue(new InfiniteToken(c));
+                    chars.Pop();
+                    break;
+                
+                case var _ when Tokens.ReRoll.Contains(c):
+                    _tokens.Enqueue(new ReRollToken(c));
+                    chars.Pop();
+                    break;
                 
                 default:
-                    throw new InvalidDataException($"Unexpected character: {c}");
+                    throw new InvalidDataException($"Unexpected symbol: {c}");
             }
         }
 
@@ -204,6 +214,16 @@ public record DelimiterToken : IToken
     public string Value => Tokens.DELIMITER.ToString();
 }
 
+public record InfiniteToken(char Symbol) : IToken
+{
+    public string Value => Symbol.ToString();
+}
+
+public record ReRollToken(char Symbol) : IToken
+{
+    public string Value => Symbol.ToString();
+}
+
 public static class EnumerableExtensions
 {
     public static Stack<T> ToStack<T>(this IEnumerable<T> collection)
@@ -220,6 +240,9 @@ public static class Tokens
     public static readonly char[] Drop = { 'd', 'D' };
     public static readonly char[] Highest = { 'h', 'H' };
     public static readonly char[] Lowest = { 'l', 'L' };
+    public static readonly char[] Infinite = { 'i', 'I' };
+    public static readonly char[] ReRoll = { 'r', 'R' };
+    
     public const char EXPLODE = '!';
     
     public const char ADD = '+';

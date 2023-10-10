@@ -70,3 +70,45 @@ public record ExplodeModifier(int MaxExplosions = 1) : IRollModifier
         }
     }
 }
+
+
+public record ReRollModifier(int MaxReRolls = 1) : IRollModifier
+{
+    public DiceResult Modify(float total, DiceRange diceRange, List<float> rolls, IDiceRollHandlers handler)
+    {
+        float newTotal = ModifyRecurse(total, diceRange, total, rolls, handler);
+        return new DiceResult(newTotal, $"{rolls.Last()}{(rolls.Count > 1 ? 'r' : "")}");
+    }
+
+    private float ModifyRecurse(
+        float total,
+        DiceRange diceRange,
+        float previousRoll,
+        List<float> rolls,
+        IDiceRollHandlers handler)
+    {
+        if (MaxReRolls is 0)
+            return total;
+        
+        if (previousRoll == diceRange.Min)
+            return HandleRoll(x => x);
+
+        if (handler.ExhaustiveRoll)
+        {
+            float fraction = 1f / diceRange.Sides;
+            return HandleRoll(x => x + x * MathF.Pow(fraction, rolls.Count) - MathF.Pow(fraction, rolls.Count));
+        }
+
+        return total;
+
+        float HandleRoll(Func<float, float> alteration)
+        {
+            float reRoll = handler.Handle(diceRange);
+            total = reRoll;
+            rolls.Add(reRoll);
+
+            return new ReRollModifier(MaxReRolls - 1)
+                .ModifyRecurse(total, diceRange, reRoll, rolls, handler);
+        }
+    }
+}

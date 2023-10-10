@@ -86,6 +86,24 @@ public class ArgsParser
                 return new SimulatedAverageEvaluation(iterations);
             }
 
+            case var _ when arg.StartsWith("graph"):
+            {
+                int indexOfColon = arg.IndexOf(':');
+                int iterations;
+                
+                if (indexOfColon == -1)
+                    iterations = 100;
+                else
+                {
+                    var iterationsValue = arg[(indexOfColon + 1)..];
+                    
+                    if (!int.TryParse(iterationsValue, out iterations))
+                        throw new ArgumentException($"Couldn't parse number of iterations as integer: {iterationsValue}");
+                }
+                
+                return new SimulatedGraphEvaluation(iterations);
+            }
+
             case "avg" or "average":
                 return new CalculatedAverageEvaluation();
             

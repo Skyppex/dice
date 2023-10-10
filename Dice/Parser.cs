@@ -147,15 +147,14 @@ public class Parser
                 case ExplodeToken:
                 {
                     _tokens.Dequeue();
+                    ExpectNumberInfiniteOrDefault(rollModifiers, n => new ExplodeModifier(n), () => new ExplodeModifier());
+                    break;
+                }
 
-                    if (_tokens.TryPeek(out IToken? secondNextToken) && secondNextToken is NumberToken numberToken)
-                    {
-                        _tokens.Dequeue();
-                        rollModifiers.Add(new ExplodeModifier(numberToken.Number));
-                        break;
-                    }
-
-                    rollModifiers.Add(new ExplodeModifier());
+                case ReRollToken:
+                {
+                    _tokens.Dequeue();
+                    ExpectNumberInfiniteOrDefault(rollModifiers, n => new ReRollModifier(n), () => new ReRollModifier());
                     break;
                 }
                 
@@ -165,6 +164,28 @@ public class Parser
         }
 
         return rollModifiers;
+    }
+
+    private void ExpectNumberInfiniteOrDefault(List<IRollModifier> rollModifiers, Func<int, IRollModifier> modifierGetter, Func<IRollModifier> defaultModifierGetter)
+    {
+        if (_tokens.TryPeek(out IToken? secondNextToken))
+        {
+            if (secondNextToken is NumberToken numberToken)
+            {
+                _tokens.Dequeue();
+                rollModifiers.Add(modifierGetter(numberToken.Number));
+                return;
+            }
+
+            if (secondNextToken is InfiniteToken)
+            {
+                _tokens.Dequeue();
+                rollModifiers.Add(modifierGetter(int.MaxValue));
+                return;
+            }
+        }
+
+        rollModifiers.Add(defaultModifierGetter());
     }
 
     private IExpression ParseKeep(NumberToken numberToken, DiceRange diceRange, List<IRollModifier> rollModifiers)
