@@ -94,10 +94,7 @@ public record ReRollModifier(int MaxReRolls = 1) : IRollModifier
             return HandleRoll(x => x);
 
         if (handler.ExhaustiveRoll)
-        {
-            float fraction = 1f / diceRange.Sides;
-            return HandleRoll(x => x + x * MathF.Pow(fraction, rolls.Count) - MathF.Pow(fraction, rolls.Count));
-        }
+            throw new NotSupportedException("Exhaustive roll is not supported for re-rolls.");
 
         return total;
 
