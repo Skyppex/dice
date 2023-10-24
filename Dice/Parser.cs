@@ -118,38 +118,53 @@ public class Parser
         if (!_tokens.TryPeek(out IToken? nextToken))
             throw new Exception("Unexpected end of tokens");
 
-        if (nextToken is NumberToken numberToken)
+        switch (nextToken)
         {
-            _tokens.Dequeue();
-            return new DiceRange(1, numberToken.Number);
-        }
-        
-        if (nextToken is OpenBracketToken)
-        {
-            _tokens.Dequeue();
-            var minToken = Expect<NumberToken>("Expected number");
-            
-            var (delimiterToken, _) = ExpectEither<DelimiterToken, OrToken>("Expected , or |");
-
-            if (delimiterToken is not null)
+            case NumberToken numberToken:
             {
-                var maxToken = Expect<NumberToken>("Expected number");
-                Expect<CloseBracketToken>("Expected ]");
-                return new DiceRange(minToken.Number, maxToken.Number);
+                _tokens.Dequeue();
+                return new DiceRange(1, numberToken.Number, IDice.DefaultFormat);
             }
 
-            List<int> values = new() { minToken.Number };
-            values.Add(Expect<NumberToken>("Expected number").Number);
-            
-            while (_tokens.TryPeek(out IToken? t) && t is not CloseBracketToken)
+            case FudgeFateToken:
             {
-                Expect<OrToken>("Expected |");
+                _tokens.Dequeue();
+                return new DiceRange(-1, 1, v => v switch
+                {
+                    < 0 => "-",
+                    0 => "0",
+                    > 0 => "+",
+                    _ => throw new UnreachableException($"Unexpected value: {v}")
+                });
+            }
+
+            case OpenBracketToken:
+            {
+                _tokens.Dequeue();
+                var minToken = Expect<NumberToken>("Expected number");
+
+                var (delimiterToken, _) = ExpectEither<DelimiterToken, OrToken>("Expected , or |");
+
+                if (delimiterToken is not null)
+                {
+                    var maxToken = Expect<NumberToken>("Expected number");
+                    Expect<CloseBracketToken>("Expected ]");
+                    return new DiceRange(minToken.Number, maxToken.Number, IDice.DefaultFormat);
+                }
+
+                List<int> values = new() { minToken.Number };
                 values.Add(Expect<NumberToken>("Expected number").Number);
+
+                while (_tokens.TryPeek(out IToken? t) && t is not CloseBracketToken)
+                {
+                    Expect<OrToken>("Expected |");
+                    values.Add(Expect<NumberToken>("Expected number").Number);
+                }
+
+                Expect<CloseBracketToken>("Expected ]");
+
+                return new DiceValues(values, IDice.DefaultFormat);
             }
-
-            Expect<CloseBracketToken>("Expected ]");
-
-            return new DiceValues(values);
         }
 
         throw new Exception($"Unexpected token: {nextToken}");
@@ -166,6 +181,14 @@ public class Parser
                 case ExplodeToken:
                 {
                     _tokens.Dequeue();
+
+                    if (_tokens.TryPeek(out IToken? t) && t is ExplodeToken)
+                    {
+                        _tokens.Dequeue();
+                        ExpectNumberInfiniteOrDefault(rollModifiers, n => new ExplodeModifier(n, Combined: true), () => new ExplodeModifier(Combined: true));
+                        break;
+                    }
+                    
                     ExpectNumberInfiniteOrDefault(rollModifiers, n => new ExplodeModifier(n), () => new ExplodeModifier());
                     break;
                 }

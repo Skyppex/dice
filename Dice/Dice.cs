@@ -1,23 +1,25 @@
+using System.Globalization;
+
 namespace Dice;
 
 public interface IDice
 {
     public int Sides { get; }
-    
     public int Max => SideValues.Max();
     public int Min => SideValues.Min();
     
     public IEnumerable<int> SideValues { get; }
+    public Func<float, string> Format { get; }
 
     public int Roll();
+    
+    public static string DefaultFormat(float v) => v.ToString(CultureInfo.InvariantCulture);
 }
 
 /// <param name="Min">Inclusive</param>
 /// <param name="Max">Inclusive</param>
-public readonly record struct DiceRange(int Min, int Max) : IDice
+public readonly record struct DiceRange(int Min, int Max, Func<float, string> Format) : IDice
 {
-    public static implicit operator DiceRange((int Min, int Max) tuple) => new(tuple.Min, tuple.Max);
-    
     public int Sides => Max - Min + 1;
     public IEnumerable<int> SideValues => Enumerable.Range(Min, Sides);
 
@@ -26,7 +28,7 @@ public readonly record struct DiceRange(int Min, int Max) : IDice
     public override string ToString() => Min == 1 ? $"{Max}" : $"[{Min}, {Min}]";
 }
 
-public readonly record struct DiceValues(IEnumerable<int> SideValues) : IDice
+public readonly record struct DiceValues(IEnumerable<int> SideValues, Func<float, string> Format) : IDice
 {
     public int Sides => SideValues.Count();
     public int Min => SideValues.Min();

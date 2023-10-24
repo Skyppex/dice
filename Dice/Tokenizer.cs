@@ -94,6 +94,11 @@ public class Tokenizer
                     chars.Pop();
                     break;
                 
+                case var _ when Tokens.FudgeOrFate.Contains(c):
+                    _tokens.Enqueue(new FudgeFateToken(c));
+                    chars.Pop();
+                    break;
+                
                 default:
                     HandleMultilineTokens(chars);
                     break;
@@ -286,6 +291,11 @@ public record ConditionToken(string ConditionalOperator) : IToken
     public override string ToString() => ConditionalOperator;
 }
 
+public record FudgeFateToken(char Symbol) : IToken
+{
+    public override string ToString() => Symbol.ToString();
+}
+
 public static class EnumerableExtensions
 {
     public static Stack<T> ToStack<T>(this IEnumerable<T> collection)
@@ -304,6 +314,7 @@ public static class Tokens
     public static readonly char[] Lowest = { 'l', 'L' };
     public static readonly char[] Infinite = { 'i', 'I' };
     public static readonly char[] ReRoll = { 'r', 'R' };
+    public static readonly char[] FudgeOrFate = { 'f', 'F' };
     
     public const char EXPLODE = '!';
     

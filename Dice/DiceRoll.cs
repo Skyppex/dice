@@ -1,27 +1,29 @@
-﻿using System.Globalization;
-
-namespace Dice;
+﻿namespace Dice;
 
 public readonly record struct DiceRoll(IDice Dice, params IRollModifier[] RollModifiers)
 {
     public DiceResult Roll(IDiceRollHandlers handler)
     {
-        List<float> rolls = new();
         List<DiceResult> diceResults = new();
 
         float total = handler.Handle(Dice);
-        rolls.Add(total);
 
+        IDice diceToUse = Dice;
+        
         foreach (IRollModifier t in RollModifiers)
         {
-            DiceResult diceResult = t.Modify(total, Dice, rolls, handler);
+            DiceResult diceResult = t.Modify(total, diceToUse, handler, out diceToUse);
             diceResults.Add(diceResult);
             total = diceResult.Value;
         }
 
-        string expression = diceResults.Any()
-            ? $"{string.Join(" -> ", diceResults.Select(dr => dr.Expression))}"
-            : total.ToString(CultureInfo.InvariantCulture);
+        diceResults.Reverse();
+        string expression = diceResults.Count switch
+        {
+            > 1 => $"{string.Join(" <- ", diceResults.Select(dr => dr.Expression))}",
+            1 => diceResults.Single().Expression,
+            _ => diceToUse.Format(total),
+        };
         
         return new DiceResult(total, expression);
     }
@@ -29,18 +31,23 @@ public readonly record struct DiceRoll(IDice Dice, params IRollModifier[] RollMo
 
 public interface IRollModifier
 {
-    public DiceResult Modify(float total, IDice dice, List<float> rolls, IDiceRollHandlers handler);
+    public DiceResult Modify(float total, IDice dice, IDiceRollHandlers handler, out IDice newDice);
 }
 
-public record ExplodeModifier(int MaxExplosions = 1) : IRollModifier
+public record ExplodeModifier(int MaxExplosions = 1, bool Combined = false) : IRollModifier
 {
-    public DiceResult Modify(float total, IDice dice, List<float> rolls, IDiceRollHandlers handler)
+    public DiceResult Modify(float total, IDice dice, IDiceRollHandlers handler, out IDice newDice)
     {
+        newDice = dice;
+        List<float> rolls = new() { total };
         float newTotal = ModifyRecurse(total, dice, total, rolls, handler);
-
+        
+        if (Combined)
+            return new DiceResult(newTotal, $"{dice.Format(newTotal)}{(rolls.Count > 1 ? new string('!', rolls.Count - 1) : string.Empty)}");
+            
         return rolls.Count <= 1
-            ? new DiceResult(newTotal, $"{rolls.Single()}")
-            : new DiceResult(newTotal, $"({string.Join(", ", rolls.Select(r => $"{r}!").Take(rolls.Count - 1))}, {rolls.Last()})");
+            ? new DiceResult(newTotal, dice.Format(newTotal))
+            : new DiceResult(newTotal, $"({string.Join(", ", rolls.Select(r => $"{dice.Format(r)}!").Take(rolls.Count - 1))}, {rolls.Last()})");
     }
 
     private float ModifyRecurse(
@@ -75,10 +82,12 @@ public record ExplodeModifier(int MaxExplosions = 1) : IRollModifier
 
 public record ReRollModifier(int MaxReRolls = 1) : IRollModifier
 {
-    public DiceResult Modify(float total, IDice dice, List<float> rolls, IDiceRollHandlers handler)
+    public DiceResult Modify(float total, IDice dice, IDiceRollHandlers handler, out IDice newDice)
     {
+        newDice = dice;
+        List<float> rolls = new() { total };
         float newTotal = ModifyRecurse(total, dice, total, rolls, handler);
-        return new DiceResult(newTotal, $"{rolls.Last()}{(rolls.Count > 1 ? 'r' : "")}");
+        return new DiceResult(newTotal, $"{dice.Format(rolls.Last())}{(rolls.Count > 1 ? 'r' : "")}");
     }
 
     private float ModifyRecurse(
@@ -113,8 +122,10 @@ public record ReRollModifier(int MaxReRolls = 1) : IRollModifier
 
 public record ConditionModifier(List<ConditionModifier.Condition> Conditions) : IRollModifier
 {
-    public DiceResult Modify(float total, IDice dice, List<float> rolls, IDiceRollHandlers handler)
+    public DiceResult Modify(float total, IDice dice, IDiceRollHandlers handler, out IDice newDice)
     {
+        newDice = new DiceValues(new[] {0, 1}, IDice.DefaultFormat);
+
         if (handler.ExhaustiveRoll)
         {
             float chanceOfSuccess = Enumerable.Range(dice.Min, dice.Sides)
