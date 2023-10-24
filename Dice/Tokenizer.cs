@@ -58,6 +58,11 @@ public class Tokenizer
                     _tokens.Enqueue(new DelimiterToken());
                     chars.Pop();
                     break;
+                
+                case Tokens.OR:
+                    _tokens.Enqueue(new OrToken());
+                    chars.Pop();
+                    break;
 
                 case var _ when Tokens.Keep.Contains(c):
                     _tokens.Enqueue(new KeepToken(c));
@@ -90,11 +95,61 @@ public class Tokenizer
                     break;
                 
                 default:
-                    throw new InvalidDataException($"Unexpected symbol: {c}");
+                    HandleMultilineTokens(chars);
+                    break;
             }
         }
 
         return _tokens;
+    }
+
+    private void HandleMultilineTokens(Stack<char> chars)
+    {
+        var c = chars.Pop();
+        switch (c)
+        {
+            case var _ when c.ToString() == Tokens.LessThan:
+            {
+                if (chars.TryPeek(out char next) && string.Concat(c, next) == Tokens.LessThanOrEqual)
+                {
+                    chars.Pop();
+                    _tokens.Enqueue(new ConditionToken(Tokens.LessThanOrEqual));
+                    break;
+                }
+
+                _tokens.Enqueue(new ConditionToken(Tokens.LessThan));
+                break;
+            }
+            
+            case var _ when c.ToString() == Tokens.GreaterThan:
+            {
+                if (chars.TryPeek(out char next) && string.Concat(c, next) == Tokens.GreaterThanOrEqual)
+                {
+                    chars.Pop();
+                    _tokens.Enqueue(new ConditionToken(Tokens.GreaterThanOrEqual));
+                    break;
+                }
+
+                _tokens.Enqueue(new ConditionToken(Tokens.GreaterThan));
+                break;
+            }
+            
+            case var _ when c.ToString() == Tokens.Equal:
+            {
+                if (chars.TryPeek(out char next) && string.Concat(c, next) == Tokens.NotEqual)
+                {
+                    chars.Pop();
+                    _tokens.Enqueue(new ConditionToken(Tokens.NotEqual));
+                    break;
+                }
+
+                _tokens.Enqueue(new ConditionToken(Tokens.Equal));
+                break;
+            }
+            
+            default:
+                throw new InvalidDataException($"Unexpected symbol: {c}");
+        }
     }
 
     private void ParseNumber(Stack<char> chars)
@@ -144,84 +199,91 @@ public class Tokenizer
     }
 }
 
-public interface IToken
-{
-    public string Value { get; }
-}
+public interface IToken { }
 
 public record NumberToken(int Number) : IToken
 {
-    public string Value => Number.ToString();
+    public override string ToString() => Number.ToString();
 }
 
 public record DiceToken : IToken
 {
-    public string Value => "d";
+    public override string ToString() => "d";
 }
 
 public record OperatorToken(char Operator) : IToken
 {
-    public string Value => Operator.ToString();
+    public override string ToString() => Operator.ToString();
 }
 
 public record KeepToken(char Symbol) : IToken
 {
-    public string Value => Symbol.ToString();
+    public override string ToString() => Symbol.ToString();
 }
 
 public record DropToken(char Symbol) : IToken
 {
-    public string Value => Symbol.ToString();
+    public override string ToString() => Symbol.ToString();
 }
 
 public record HighestToken(char Symbol) : IToken
 {
-    public string Value => Symbol.ToString();
+    public override string ToString() => Symbol.ToString();
 }
 
 public record LowestToken(char Symbol) : IToken
 {
-    public string Value => Symbol.ToString();
+    public override string ToString() => Symbol.ToString();
 }
 
 public record ExplodeToken : IToken
 {
-    public string Value => Tokens.EXPLODE.ToString();
+    public override string ToString() => Tokens.EXPLODE.ToString();
 }
 
 public record OpenParenToken : IToken
 {
-    public string Value => Tokens.OPEN_PAREN.ToString();
+    public override string ToString() => Tokens.OPEN_PAREN.ToString();
 }
 
 public record CloseParenToken : IToken
 {
-    public string Value => Tokens.CLOSE_PAREN.ToString();
+    public override string ToString() => Tokens.CLOSE_PAREN.ToString();
 }
 
 public record OpenBracketToken : IToken
 {
-    public string Value => Tokens.OPEN_BRACKET.ToString();
+    public override string ToString() => Tokens.OPEN_BRACKET.ToString();
 }
 
 public record CloseBracketToken : IToken
 {
-    public string Value => Tokens.CLOSE_BRACKET.ToString();
+    public override string ToString() => Tokens.CLOSE_BRACKET.ToString();
 }
 
 public record DelimiterToken : IToken
 {
-    public string Value => Tokens.DELIMITER.ToString();
+    public override string ToString() => Tokens.DELIMITER.ToString();
+}
+
+public record OrToken : IToken
+{
+    public override string ToString() => Tokens.OR.ToString();
 }
 
 public record InfiniteToken(char Symbol) : IToken
 {
-    public string Value => Symbol.ToString();
+    public override string ToString() => Symbol.ToString();
 }
 
 public record ReRollToken(char Symbol) : IToken
 {
-    public string Value => Symbol.ToString();
+    public override string ToString() => Symbol.ToString();
+}
+
+public record ConditionToken(string ConditionalOperator) : IToken
+{
+    public override string ToString() => ConditionalOperator;
 }
 
 public static class EnumerableExtensions
@@ -250,6 +312,16 @@ public static class Tokens
     public const char MUL = '*';
     public const char DIV = '/';
     public const char MOD = '%';
+    
+    public static readonly string LessThan = "<";
+    public static readonly string GreaterThan = ">";
+    public static readonly string LessThanOrEqual = "<=";
+    public static readonly string GreaterThanOrEqual = ">=";
+    public static readonly string Equal = "=";
+    public static readonly string NotEqual = "=!";
+    
+    public const char OR = '\\';
+    
     public const char OPEN_PAREN = '(';
     public const char CLOSE_PAREN = ')';
     public const char OPEN_BRACKET = '[';

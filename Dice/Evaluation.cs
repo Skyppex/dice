@@ -1,6 +1,3 @@
-using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Dice;
@@ -22,7 +19,7 @@ public record SingleEvaluation : IEvaluationMode
     {
         Queue<IToken> tokens = new Tokenizer().Tokenize(roll);
         IExpression expression = Parser.Parse(tokens);
-        return expression.Evaluate(new RandomRollHandler(Random.Shared));
+        return expression.Evaluate(new RandomRollHandler());
     }
 }
 
@@ -45,7 +42,7 @@ public record SimulatedAverageEvaluation(int Iterations) : IEvaluationMode
 
         float average = Enumerable.Range(0, Iterations)
             .AsParallel()
-            .Select(_ => expression.Evaluate(new RandomRollHandler(Random.Shared)))
+            .Select(_ => expression.Evaluate(new RandomRollHandler()))
             .Average(dr => dr.Value);
         
         return new DiceResult(average, $"Rolled ({roll}) {Iterations} times and took the average.");
@@ -63,12 +60,13 @@ public record SimulatedGraphEvaluation(int Iterations) : IEvaluationMode
 
         var rolls = Enumerable.Range(0, Iterations)
             .AsParallel()
-            .Select(_ => expression.Evaluate(new RandomRollHandler(Random.Shared)).Value)
+            .Select(_ => expression.Evaluate(new RandomRollHandler()).Value)
             .ToList();
         
         float average = rolls.Average();
 
-        var distribution = rolls.GroupBy(r => r).OrderBy(g => g.Key).Select(g => g.Count()).ToList();
+        var groups = rolls.GroupBy(r => r).OrderBy(g => g.Key);
+        var distribution = groups.Select(g => g.Count()).ToList();
         int distributionCount = distribution.Count;
         
         int min = distribution.Min();
@@ -87,7 +85,7 @@ public record SimulatedGraphEvaluation(int Iterations) : IEvaluationMode
             }
             graph.AppendLine();
         }
-        
+
         return new DiceResult(average, $"Distribution of ({roll}) {Iterations} times:\n{graph}");
     }
 }

@@ -23,6 +23,7 @@ public static class Help
         builder.AppendLine("Make a dice roll:");
         builder.AppendLine(WriteExplanation("<rolls>d<sides>", "Roll <rolls> dice with <sides> sides and sum them together -> 4d6"));
         builder.AppendLine(WriteExplanation("<rolls>d[<min>,<max>]", "Roll <rolls> dice with <min> to <max> sides and sum them together -> 4d[1,6]"));
+        builder.AppendLine(WriteExplanation(@"<rolls>d[<value>\]*", @"Roll <rolls> dice with <values> as faces and sum them together -> 4d[1\3\5]"));
         builder.AppendLine();
         builder.AppendLine("Modifiers:");
         builder.AppendLine(WriteExplanation("k[<keep>]", "Keep the highest <keep> (default 1) -> 4d6k3"));
@@ -30,6 +31,15 @@ public static class Help
         builder.AppendLine(WriteExplanation("dh[<drop>]", "Drop the highest <drop> (default 1) -> 4d6dh3"));
         builder.AppendLine(WriteExplanation("dl[<drop>]", "Drop the highest <drop> (default 1) -> 4d6dl3"));
         builder.AppendLine(WriteExplanation("![<explode>]", "Explode dice up to <explode> number of times (default 1) -> 4d6!3"));
+        builder.AppendLine("Conditionals");
+        builder.AppendLine(WriteExplanation("[<operator>][<value>]", "Check if the roll is <operator> <value> (Success = 1, Failure = 0)-> 4d6>3"));
+        builder.AppendLine(WriteExplanation("    =", "Equal to"));
+        builder.AppendLine(WriteExplanation("    =!", "Not equal to (cannot use '!=' due to a collision with 'explode')"));
+        builder.AppendLine(WriteExplanation("    >", "Greater than"));
+        builder.AppendLine(WriteExplanation("    <", "Less than"));
+        builder.AppendLine(WriteExplanation("    >=", "Greater than or equal to"));
+        builder.AppendLine(WriteExplanation("    <=", "Less than or equal to"));
+        builder.AppendLine(WriteExplanation("    >[<value1>]<[<value2>]", "Greater than <value1> and less than <value2>"));
         builder.AppendLine();
         builder.AppendLine("Basic math operators:");
         builder.AppendLine(WriteExplanation("+", "Addition -> 1d6 + 1d6 + 2"));
@@ -44,7 +54,7 @@ public static class Help
     private static string WriteExplanation(string expression, string explanation)
     {
         int expressionLength = expression.Length;
-        const int PADDING = 30;
+        const int PADDING = 50;
         int padding = PADDING - expressionLength;
         return $"    {expression}{new string(' ', padding)}{explanation}";
     }
