@@ -199,6 +199,12 @@ public class Parser
                     ExpectNumberInfiniteOrDefault(rollModifiers, n => new ReRollModifier(n), () => new ReRollModifier());
                     break;
                 }
+                
+                // case UniqueToken:
+                // {
+                //     _tokens.Dequeue();
+                //     ExpectNumberInfiniteOrDefault(rollModifiers, n => new UniqueModifier(n), () => new UniqueModifier());
+                // }
 
                 case ConditionToken:
                 {
