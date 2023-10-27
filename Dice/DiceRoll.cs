@@ -1,8 +1,11 @@
-﻿namespace Dice;
+﻿using Monads;
+using static Monads.Option;
+
+namespace Dice;
 
 public readonly record struct DiceRoll(IDice Dice, params IRollModifier[] RollModifiers)
 {
-    public DiceResult Roll(IDiceRollHandlers handler)
+    public DiceResult Roll(IDiceRollHandlers handler, IReadOnlyList<float> previousResults)
     {
         List<DiceResult> diceResults = new();
 
@@ -12,9 +15,15 @@ public readonly record struct DiceRoll(IDice Dice, params IRollModifier[] RollMo
         
         foreach (IRollModifier t in RollModifiers)
         {
-            DiceResult diceResult = t.Modify(total, diceToUse, handler, out diceToUse);
-            diceResults.Add(diceResult);
-            total = diceResult.Value;
+            Option<DiceResult> diceResult = t.Modify(total, diceToUse, handler, previousResults, out diceToUse);
+            
+            diceResult.Match(
+                some: dr =>
+                {
+                    diceResults.Add(dr);
+                    total = dr.Value;
+                },
+                none: () => { });
         }
 
         diceResults.Reverse();
@@ -31,26 +40,26 @@ public readonly record struct DiceRoll(IDice Dice, params IRollModifier[] RollMo
 
 public interface IRollModifier
 {
-    public DiceResult Modify(float total, IDice dice, IDiceRollHandlers handler, out IDice newDice);
+    public Option<DiceResult> Modify(float total, IDice dice, IDiceRollHandlers handler, IReadOnlyList<float> previousResults, out IDice newDice);
 }
 
 public record ExplodeModifier(int MaxExplosions = 1, bool Combined = false) : IRollModifier
 {
-    public DiceResult Modify(float total, IDice dice, IDiceRollHandlers handler, out IDice newDice)
+    public Option<DiceResult> Modify(float total, IDice dice, IDiceRollHandlers handler, IReadOnlyList<float> previousResults, out IDice newDice)
     {
         newDice = dice;
         List<float> rolls = new() { total };
-        float newTotal = ModifyRecurse(total, dice, total, rolls, handler);
+        Option<float> newTotal = ModifyRecurse(total, dice, total, rolls, handler);
         
         if (Combined)
-            return new DiceResult(newTotal, $"{dice.Format(newTotal)}{(rolls.Count > 1 ? new string('!', rolls.Count - 1) : string.Empty)}");
+            return newTotal.Map(t => new DiceResult(t, $"{dice.Format(t)}{(rolls.Count > 1 ? new string('!', rolls.Count - 1) : string.Empty)}"));
             
         return rolls.Count <= 1
-            ? new DiceResult(newTotal, dice.Format(newTotal))
-            : new DiceResult(newTotal, $"({string.Join(", ", rolls.Select(r => $"{dice.Format(r)}!").Take(rolls.Count - 1))}, {rolls.Last()})");
+            ? newTotal.Map(t => new DiceResult(t, dice.Format(t)))
+            : newTotal.Map(t => new DiceResult(t, $"({string.Join(", ", rolls.Select(r => $"{dice.Format(r)}!").Take(rolls.Count - 1))}, {rolls.Last()})"));
     }
 
-    private float ModifyRecurse(
+    private Option<float> ModifyRecurse(
         float total,
         IDice dice,
         float previousRoll,
@@ -58,17 +67,17 @@ public record ExplodeModifier(int MaxExplosions = 1, bool Combined = false) : IR
         IDiceRollHandlers handler)
     {
         if (MaxExplosions is 0)
-            return total;
+            return Some(total);
         
-        if (previousRoll == dice.Max)
-            return HandleRoll(1f);
+        if (previousRoll >= dice.Max)
+            return HandleExplode(1f);
 
         if (handler.ExhaustiveRoll)
-            return HandleRoll(MathF.Pow(1f / dice.Sides, rolls.Count));
+            return HandleExplode(MathF.Pow(1f / dice.Sides, rolls.Count));
 
-        return total;
+        return rolls.Count == 1 ? None<float>() : Some(total);
 
-        float HandleRoll(float multiplier)
+        Option<float> HandleExplode(float multiplier)
         {
             float explosion = multiplier * handler.Handle(dice);
             rolls.Add(explosion);
@@ -80,49 +89,115 @@ public record ExplodeModifier(int MaxExplosions = 1, bool Combined = false) : IR
     }
 }
 
-public record ReRollModifier(int MaxReRolls = 1) : IRollModifier
+public record ReRollModifier(IRollModifier[] RollModifiers, int MaxReRolls = 1, Func<float, bool>? Condition = null) : IRollModifier
 {
-    public DiceResult Modify(float total, IDice dice, IDiceRollHandlers handler, out IDice newDice)
+    public Option<DiceResult> Modify(float total, IDice dice, IDiceRollHandlers handler, IReadOnlyList<float> previousResults, out IDice newDice)
     {
         newDice = dice;
         List<float> rolls = new() { total };
-        float newTotal = ModifyRecurse(total, dice, total, rolls, handler);
-        return new DiceResult(newTotal, $"{dice.Format(rolls.Last())}{(rolls.Count > 1 ? 'r' : "")}");
+        List<string> builder = new();
+        Option<float> newTotal = ModifyRecurse(total, dice, total, rolls, handler, previousResults, builder);
+        
+        return newTotal.Map(t =>
+        {
+            var formattedLastRoll = dice.Format(rolls.Last());
+            var suffixExpression = () => builder.Count > 1 ? $"({string.Join(" <- ", builder)})" : string.Empty;
+            var suffix = rolls.Count > 1 ? $"r{suffixExpression()}" : string.Empty;
+            return new DiceResult(t, $"{formattedLastRoll}{suffix}");
+        });
     }
 
-    private float ModifyRecurse(
+    private Option<float> ModifyRecurse(
         float total,
         IDice dice,
         float previousRoll,
         List<float> rolls,
-        IDiceRollHandlers handler)
+        IDiceRollHandlers handler,
+        IReadOnlyList<float> previousResults,
+        List<string> builder)
     {
         if (MaxReRolls is 0)
-            return total;
+            return Some(total);
         
-        if (previousRoll == dice.Min)
-            return HandleRoll();
+        if (Condition?.Invoke(previousRoll) ?? previousRoll == dice.Min)
+            return HandleReRoll();
 
         if (handler.ExhaustiveRoll)
             throw new NotSupportedException("Exhaustive roll is not supported for re-rolls.");
 
-        return total;
+        return rolls.Count == 1 ? None<float>() : Some(total);
 
-        float HandleRoll()
+        Option<float> HandleReRoll()
         {
             float reRoll = handler.Handle(dice);
             total = reRoll;
-            rolls.Add(reRoll);
 
-            return new ReRollModifier(MaxReRolls - 1)
-                .ModifyRecurse(total, dice, reRoll, rolls, handler);
+            IDice diceToUse = dice;
+            List<DiceResult> diceResults = new();
+            
+            foreach (IRollModifier rollModifier in RollModifiers)
+            {
+                Option<DiceResult> option =  rollModifier.Modify(total, diceToUse, handler, previousResults, out diceToUse);
+
+                option.Match(
+                    some: dr =>
+                    {
+                        total = dr.Value;
+                        diceResults.Add(dr);
+                    },
+                    none: () => { });
+            }
+
+            rolls.Add(total);
+
+            if (diceResults.Count > 1)
+            {
+                string expression = diceResults.Count switch
+                {
+                    > 1 => $"{string.Join(" <- ", diceResults.Select(dr => dr.Expression))}",
+                    1 => diceResults.Single().Expression,
+                    _ => diceToUse.Format(total),
+                };
+                
+                builder.Insert(0, expression);
+            }
+            
+            return (this with { MaxReRolls = MaxReRolls - 1 })
+                .ModifyRecurse(total, dice, total, rolls, handler, previousResults, builder);
         }
+    }
+}
+
+public record UniqueModifier(IRollModifier[] RollModifiers, int MaxRetries = 100) : IRollModifier
+{
+    public Option<DiceResult> Modify(float total, IDice dice, IDiceRollHandlers handler, IReadOnlyList<float> previousResults, out IDice newDice)
+    {
+        newDice = dice;
+        
+        for (int i = 0; i < MaxRetries; i++)
+        {
+            if (!previousResults.Contains(total))
+                return Some(new DiceResult(total, $"{dice.Format(total)}{(i > 0 ? 'u' : string.Empty)}"));
+            
+            total = handler.Handle(dice);
+
+            foreach (IRollModifier rollModifier in RollModifiers)
+            {
+                Option<DiceResult> option = rollModifier.Modify(total, dice, handler, previousResults, out newDice);
+
+                option.Match(
+                    some: dr => total = dr.Value,
+                    none: () => { });
+            }
+        }
+
+        throw new OverflowException($"Could not find a unique roll in {MaxRetries} tries.");
     }
 }
 
 public record ConditionModifier(List<ConditionModifier.Condition> Conditions) : IRollModifier
 {
-    public DiceResult Modify(float total, IDice dice, IDiceRollHandlers handler, out IDice newDice)
+    public Option<DiceResult> Modify(float total, IDice dice, IDiceRollHandlers handler, IReadOnlyList<float> previousResults, out IDice newDice)
     {
         newDice = new DiceValues(new[] {0, 1}, IDice.DefaultFormat);
 
@@ -133,12 +208,12 @@ public record ConditionModifier(List<ConditionModifier.Condition> Conditions) : 
                 .Average(c => c ? 1f : 0f);
             
             string conditionString = string.Join("", Conditions.Select(c => $"{c.Operator}{c.Value}"));
-            return new DiceResult(chanceOfSuccess, $"1d{dice}{conditionString} chance: {chanceOfSuccess * 100f}%");
+            return Some(new DiceResult(chanceOfSuccess, $"1d{dice}{conditionString} chance: {chanceOfSuccess * 100f}%"));
         }
         
         bool succeeded = Check(total);
         float newTotal = succeeded ? 1f : 0f;
-        return new DiceResult(newTotal, succeeded ? "Success(1)" : "Failure(0)");
+        return Some(new DiceResult(newTotal, succeeded ? "Success(1)" : "Failure(0)"));
     }
     
     private bool Check(float total)

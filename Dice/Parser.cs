@@ -196,15 +196,51 @@ public class Parser
                 case ReRollToken:
                 {
                     _tokens.Dequeue();
-                    ExpectNumberInfiniteOrDefault(rollModifiers, n => new ReRollModifier(n), () => new ReRollModifier());
+
+                    if (_tokens.TryPeek(out IToken? secondNextToken))
+                    {
+                        int? maxReRolls = null;
+
+                        if (secondNextToken is NumberToken numberOfReRollsToken)
+                        {
+                            maxReRolls = numberOfReRollsToken.Number;
+                            _tokens.Dequeue();
+                            
+                            if (!_tokens.TryPeek(out secondNextToken))
+                                rollModifiers.Add(new ReRollModifier(rollModifiers.ToArray(), maxReRolls.Value));
+                        }
+                        else if (secondNextToken is InfiniteToken)
+                        {
+                            maxReRolls = int.MaxValue;
+                            _tokens.Dequeue();
+                            
+                            if (!_tokens.TryPeek(out secondNextToken))
+                                rollModifiers.Add(new ReRollModifier(rollModifiers.ToArray(), maxReRolls.Value));
+                        }
+
+                        if (secondNextToken is ConditionToken conditionToken)
+                        {
+                            _tokens.Dequeue();
+                            var numberToken = Expect<NumberToken>("Expected number");
+                            var condition = conditionToken.GetCondition(numberToken.Number);
+                            rollModifiers.Add(new ReRollModifier(rollModifiers.ToArray(), maxReRolls ?? 1, condition));
+                            break;
+                        }
+                        
+                        rollModifiers.Add(new ReRollModifier(rollModifiers.ToArray(), maxReRolls ?? 1));
+                        break;
+                    }
+                    
+                    rollModifiers.Add(new ReRollModifier(rollModifiers.ToArray()));
                     break;
                 }
                 
-                // case UniqueToken:
-                // {
-                //     _tokens.Dequeue();
-                //     ExpectNumberInfiniteOrDefault(rollModifiers, n => new UniqueModifier(n), () => new UniqueModifier());
-                // }
+                case UniqueToken:
+                {
+                    _tokens.Dequeue();
+                    ExpectNumberInfiniteOrDefault(rollModifiers, n => new UniqueModifier(rollModifiers.ToArray(), n), () => new UniqueModifier(rollModifiers.ToArray()));
+                    break;
+                }
 
                 case ConditionToken:
                 {
@@ -411,8 +447,14 @@ public record DiceExpression(int Amount, IDice DiceRange, DiceExpression.IMode M
     {
         public DiceResult Evaluate(int amount, IDice dice, IDiceRollHandlers handler)
         {
+            List<float> runningRolls = new();
             DiceResult[] rolls = Enumerable.Range(1, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(handler))
+                .Select(_ =>
+                {
+                    var result = new DiceRoll(dice, RollModifiers).Roll(handler, runningRolls);
+                    runningRolls.Add(result.Value);
+                    return result;
+                })
                 .OrderByDescending(dr => dr.Value)
                 .ToArray();
 
@@ -425,8 +467,14 @@ public record DiceExpression(int Amount, IDice DiceRange, DiceExpression.IMode M
     {
         public DiceResult Evaluate(int amount, IDice dice, IDiceRollHandlers handler)
         {
+            List<float> runningRolls = new();
             DiceResult[] rolls = Enumerable.Range(0, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(handler))
+                .Select(_ =>
+                {
+                    var result = new DiceRoll(dice, RollModifiers).Roll(handler, runningRolls);
+                    runningRolls.Add(result.Value);
+                    return result;
+                })
                 .OrderByDescending(n => n.Value)
                 .ToArray();
 
@@ -445,8 +493,14 @@ public record DiceExpression(int Amount, IDice DiceRange, DiceExpression.IMode M
     {
         public DiceResult Evaluate(int amount, IDice dice, IDiceRollHandlers handler)
         {
+            List<float> runningRolls = new();
             DiceResult[] rolls = Enumerable.Range(0, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(handler))
+                .Select(_ =>
+                {
+                    var result = new DiceRoll(dice, RollModifiers).Roll(handler, runningRolls);
+                    runningRolls.Add(result.Value);
+                    return result;
+                })
                 .OrderBy(n => n.Value)
                 .ToArray();
 
@@ -465,8 +519,14 @@ public record DiceExpression(int Amount, IDice DiceRange, DiceExpression.IMode M
     {
         public DiceResult Evaluate(int amount, IDice dice, IDiceRollHandlers handler)
         {
+            List<float> runningRolls = new();
             DiceResult[] rolls = Enumerable.Range(0, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(handler))
+                .Select(_ =>
+                {
+                    var result = new DiceRoll(dice, RollModifiers).Roll(handler, runningRolls);
+                    runningRolls.Add(result.Value);
+                    return result;
+                })
                 .OrderByDescending(n => n.Value)
                 .ToArray();
 
@@ -485,8 +545,14 @@ public record DiceExpression(int Amount, IDice DiceRange, DiceExpression.IMode M
     {
         public DiceResult Evaluate(int amount, IDice dice, IDiceRollHandlers handler)
         {
+            List<float> runningRolls = new();
             DiceResult[] rolls = Enumerable.Range(0, amount)
-                .Select(_ => new DiceRoll(dice, RollModifiers).Roll(handler))
+                .Select(_ =>
+                {
+                    var result = new DiceRoll(dice, RollModifiers).Roll(handler, runningRolls);
+                    runningRolls.Add(result.Value);
+                    return result;
+                })
                 .OrderBy(n => n.Value)
                 .ToArray();
 

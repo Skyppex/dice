@@ -21,7 +21,7 @@ public class Tokenizer
                     break;
 
                 case var _ when IsDiceOperator(c, chars):
-                    _tokens.Enqueue(new DiceToken());
+                    _tokens.Enqueue(new DiceToken(c));
                     chars.Pop();
                     break;
 
@@ -176,7 +176,7 @@ public class Tokenizer
     
     private static bool IsDiceOperator(char c, Stack<char> chars)
     {
-        if (!Tokens.DiceOperators.Contains(c))
+        if (!Tokens.Die.Contains(c))
             return false;
 
         chars.Pop();
@@ -216,9 +216,9 @@ public record NumberToken(int Number) : IToken
     public override string ToString() => Number.ToString();
 }
 
-public record DiceToken : IToken
+public record DiceToken(char Symbol) : IToken
 {
-    public override string ToString() => "d";
+    public override string ToString() => Symbol.ToString();
 }
 
 public record OperatorToken(char Operator) : IToken
@@ -294,6 +294,16 @@ public record ReRollToken(char Symbol) : IToken
 public record ConditionToken(string ConditionalOperator) : IToken
 {
     public override string ToString() => ConditionalOperator;
+    public Func<float, bool> GetCondition(int checkValue) => ConditionalOperator switch
+    {
+        var c when c == Tokens.LessThan => v => v < checkValue,
+        var c when c == Tokens.LessThanOrEqual => v => v <= checkValue,
+        var c when c == Tokens.GreaterThan => v => v > checkValue,
+        var c when c == Tokens.GreaterThanOrEqual => v => v >= checkValue,
+        var c when c == Tokens.Equal => v => v == checkValue,
+        var c when c == Tokens.NotEqual => v => v != checkValue,
+        _ => throw new InvalidDataException($"Unexpected conditional operator: {ConditionalOperator}")
+    };
 }
 
 public record FudgeFateToken(char Symbol) : IToken
@@ -317,7 +327,7 @@ public static class EnumerableExtensions
 
 public static class Tokens
 {
-    public static readonly char[] DiceOperators = { 'd', 'D' };
+    public static readonly char[] Die = { 'd', 'D' };
     public static readonly char[] Keep = { 'k', 'K' };
     public static readonly char[] Drop = { 'd', 'D' };
     public static readonly char[] Highest = { 'h', 'H' };
