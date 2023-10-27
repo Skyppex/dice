@@ -5,14 +5,14 @@ Args parsedArgs = new ArgsParser(args).ParseArgs();
 
 Stopwatch? stopwatch = null;
 
-if (parsedArgs.Timer)
-    stopwatch = Stopwatch.StartNew();
-
 if (parsedArgs == Args.Empty)
 {
     Help.Print();
     return;
 }
+
+if (parsedArgs.Timer)
+    stopwatch = Stopwatch.StartNew();
 
 DiceResult diceResult = parsedArgs.Mode.Evaluate(parsedArgs.Roll);
 PrintResults(diceResult.Value, parsedArgs.PrintExpression ? diceResult.Expression : string.Empty, stopwatch);

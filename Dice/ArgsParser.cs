@@ -27,21 +27,21 @@ public class ArgsParser
         {
             switch (arg)
             {
-                case "-h" or "-help" or "-?":
+                case "-h" or "-?" or "--help":
                     return Args.Empty;
 
-                case "-m" or "-mode":
+                case "-m" or "--mode":
                     if (argsContainer.Mode != null)
                         throw new ArgumentException("Mode already specified");
                     
                     argsContainer.Mode = ParseModeArgs();
                     break;
                 
-                case "-e" or "-expression":
+                case "-e" or "--expression":
                     argsContainer.PrintExpression = true;
                     break;
                 
-                case "-t" or "-time":
+                case "-t" or "--time":
                     argsContainer.Timer = true;
                     break;
                 
