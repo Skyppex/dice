@@ -14,8 +14,15 @@ if (parsedArgs == Args.Empty)
 if (parsedArgs.Timer)
     stopwatch = Stopwatch.StartNew();
 
-DiceResult diceResult = parsedArgs.Mode.Evaluate(parsedArgs.Roll);
-PrintResults(diceResult.Value, parsedArgs.PrintExpression ? diceResult.Expression : string.Empty, stopwatch);
+try
+{
+    DiceResult diceResult = parsedArgs.Mode.Evaluate(parsedArgs.Roll);
+    PrintResults(diceResult.Value, parsedArgs.PrintExpression ? diceResult.Expression : string.Empty, stopwatch);
+}
+catch (NotSupportedException e)
+{
+    Console.WriteLine($"Error: {e.Message}");
+}
 
 return;
 

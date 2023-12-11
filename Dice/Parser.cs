@@ -84,33 +84,33 @@ public class Parser
     {
         _tokens.Dequeue();
 
-        var diceRange = ParseDice();
+        var dice = ParseDice();
 
         List<IRollModifier> rollModifiers = ParseRollModifiers();
         
         if (!_tokens.TryPeek(out IToken? nextToken))
-            return new DiceExpression(numberToken.Number, diceRange, DiceExpression.Modes.Default(rollModifiers.ToArray()));
+            return new DiceExpression(numberToken.Number, dice, DiceExpression.Modes.Default(rollModifiers.ToArray()));
 
         switch (nextToken)
         {
             case KeepToken:
             {
                 _tokens.Dequeue();
-                return ParseKeep(numberToken, diceRange, rollModifiers);
+                return ParseKeep(numberToken, dice, rollModifiers);
             }
 
             case DropToken:
             {
                 _tokens.Dequeue();
 
-                if (ParseDrop(numberToken, diceRange, rollModifiers, out IExpression? dropExpression))
+                if (ParseDrop(numberToken, dice, rollModifiers, out IExpression? dropExpression))
                     return dropExpression!;
 
                 break;
             }
         }
 
-        return new DiceExpression(numberToken.Number, diceRange, DiceExpression.Modes.Default(rollModifiers.ToArray()));
+        return new DiceExpression(numberToken.Number, dice, DiceExpression.Modes.Default(rollModifiers.ToArray()));
     }
     
     private IDice ParseDice()
@@ -123,13 +123,13 @@ public class Parser
             case NumberToken numberToken:
             {
                 _tokens.Dequeue();
-                return new DiceRange(1, numberToken.Number, IDice.DefaultFormat);
+                return new DiceRange(1, numberToken.Number, 1, IDice.DefaultFormat);
             }
 
             case FudgeFateToken:
             {
                 _tokens.Dequeue();
-                return new DiceRange(-1, 1, v => v switch
+                return new DiceRange(-1, 1, 1, v => v switch
                 {
                     < 0 => "-",
                     0 => "0",
@@ -149,7 +149,7 @@ public class Parser
                 {
                     var maxToken = Expect<NumberToken>("Expected number");
                     Expect<CloseBracketToken>("Expected ]");
-                    return new DiceRange(minToken.Number, maxToken.Number, IDice.DefaultFormat);
+                    return new DiceRange(minToken.Number, maxToken.Number, 1, IDice.DefaultFormat);
                 }
 
                 List<int> values = new() { minToken.Number };
@@ -163,7 +163,7 @@ public class Parser
 
                 Expect<CloseBracketToken>("Expected ]");
 
-                return new DiceValues(values, IDice.DefaultFormat);
+                return new DiceValues(values, 1, IDice.DefaultFormat);
             }
         }
 

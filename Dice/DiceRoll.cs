@@ -123,7 +123,8 @@ public record ReRollModifier(IRollModifier[] RollModifiers, int MaxReRolls = 1, 
             return HandleReRoll();
 
         if (handler.ExhaustiveRoll)
-            throw new NotSupportedException("Exhaustive roll is not supported for re-rolls.");
+            throw new NotSupportedException(
+                $"Exhaustive roll is not supported for re-rolls.{(handler is AverageRollHandler ? " Use simavg instead." : string.Empty)}");
 
         return rolls.Count == 1 ? None<float>() : Some(total);
 
@@ -199,7 +200,7 @@ public record ConditionModifier(List<ConditionModifier.Condition> Conditions) : 
 {
     public Option<DiceResult> Modify(float total, IDice dice, IDiceRollHandlers handler, IReadOnlyList<float> previousResults, out IDice newDice)
     {
-        newDice = new DiceValues(new[] {0, 1}, IDice.DefaultFormat);
+        newDice = new DiceValues(new[] {0, 1}, 1, IDice.DefaultFormat);
 
         if (handler.ExhaustiveRoll)
         {
