@@ -16,10 +16,7 @@ public class ArgsParser
     private Args GetEvaluationMode()
     {
         if (_args.Count == 0)
-        {
-            Help.Print();
             return Args.Empty;
-        }
 
         var argsContainer = new ArgsContainer();
         
@@ -27,7 +24,7 @@ public class ArgsParser
         {
             switch (arg)
             {
-                case "-h" or "-?" or "--help":
+                case "-h" or "--help":
                     return Args.Empty;
 
                 case "-m" or "--mode":
@@ -37,7 +34,7 @@ public class ArgsParser
                     argsContainer.Mode = ParseModeArgs();
                     break;
                 
-                case "-e" or "--expression":
+                case "-e" or "--expr":
                     argsContainer.PrintExpression = true;
                     break;
                 
@@ -84,24 +81,6 @@ public class ArgsParser
                 }
                 
                 return new SimulatedAverageEvaluation(iterations);
-            }
-
-            case var _ when arg.StartsWith("graph"):
-            {
-                int indexOfColon = arg.IndexOf(':');
-                int iterations;
-                
-                if (indexOfColon == -1)
-                    iterations = 100;
-                else
-                {
-                    var iterationsValue = arg[(indexOfColon + 1)..];
-                    
-                    if (!int.TryParse(iterationsValue, out iterations))
-                        throw new ArgumentException($"Couldn't parse number of iterations as integer: {iterationsValue}");
-                }
-                
-                return new SimulatedGraphEvaluation(iterations);
             }
 
             case "avg" or "average":
