@@ -30,6 +30,13 @@ public static class Help
         builder.AppendLine(WriteExplanation("dh[<drop>]", "Drop the highest <drop> (default 1) -> 4d6dh3"));
         builder.AppendLine(WriteExplanation("dl[<drop>]", "Drop the highest <drop> (default 1) -> 4d6dl3"));
         builder.AppendLine(WriteExplanation("![<explode>]", "Explode dice up to <explode> number of times (default 1) -> 4d6!3"));
+        builder.AppendLine(WriteExplanation("r[<reroll>]", "Reroll dice up to <reroll> number of times if the result of the roll is the lowest possible value on the die (default 1) -> 4d6r3"));
+        builder.AppendLine(WriteExplanation("    =<value>", "Reroll dice if the result of the roll is equal to <value> -> 4d6r=1"));
+        builder.AppendLine(WriteExplanation("    =!<value>", "Reroll dice if the result of the roll is not equal to <value> -> 4d6r=!1"));
+        builder.AppendLine(WriteExplanation("    ><value>", "Reroll dice if the result of the roll is greater than <value> -> 4d6r>1"));
+        builder.AppendLine(WriteExplanation("    <<value>", "Reroll dice if the result of the roll is less than <value> -> 4d6r<1"));
+        builder.AppendLine(WriteExplanation("    >=<value>", "Reroll dice if the result of the roll is greater than or equal to <value> -> 4d6r>=1"));
+        builder.AppendLine(WriteExplanation("    <=<value>", "Reroll dice if the result of the roll is less than or equal to <value> -> 4d6r<=1"));
         builder.AppendLine();
         builder.AppendLine("Basic math operators:");
         builder.AppendLine(WriteExplanation("+", "Addition -> 1d6 + 1d6 + 2"));
