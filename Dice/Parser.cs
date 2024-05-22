@@ -29,7 +29,7 @@ public class Parser
         while (_tokens.TryPeek(out IToken? nextToken) && nextToken is OperatorToken operatorToken)
         {
             if (operatorToken.Operator is not (Tokens.ADD or Tokens.SUB))
-                continue;
+                break;
 
             _tokens.Dequeue();
             IExpression right = ParseMultiplicative();
@@ -41,17 +41,34 @@ public class Parser
 
     private IExpression ParseMultiplicative()
     {
-        IExpression left = ParsePrimary();
+        IExpression left = ParseUnary();
 
-        while (_tokens.TryPeek(out IToken? nextToken) &&
-               nextToken is OperatorToken { Operator: Tokens.MUL or Tokens.DIV or Tokens.MOD } operatorToken)
+        while (_tokens.TryPeek(out IToken? nextToken) && nextToken is OperatorToken operatorToken)
         {
+            if (operatorToken.Operator is not (Tokens.MUL or Tokens.DIV or Tokens.MOD))
+                break;
+            
             _tokens.Dequeue();
-            IExpression right = ParsePrimary();
+            IExpression right = ParseUnary();
             left = new BinaryExpression(left, operatorToken.Operator, right);
         }
 
         return left;
+    }
+
+    private IExpression ParseUnary()
+    {
+        while (_tokens.TryPeek(out IToken? nextToken) && nextToken is OperatorToken operatorToken)
+        {
+            if (operatorToken.Operator is not (Tokens.ADD or Tokens.SUB))
+                break;
+
+            _tokens.Dequeue();
+            IExpression right = ParsePrimary();
+            return new UnaryExpression(operatorToken.Operator, right);
+        }
+        
+        return ParsePrimary();
     }
     
     private IExpression ParsePrimary()
@@ -591,6 +608,25 @@ public record BinaryExpression(IExpression Left, char Operator, IExpression Righ
         };
 
         return new DiceResult(result, $"{leftResult.Expression} {Operator} {rightResult.Expression}");
+    }
+}
+
+public record UnaryExpression(char Operator, IExpression Expression) : IExpression
+{
+    public DiceResult Evaluate(IDiceRollHandlers handler)
+    {
+        DiceResult rightResult = Expression.Evaluate(handler);
+
+        float result = Operator switch
+        {
+            Tokens.ADD => +rightResult.Value,
+            Tokens.SUB => -rightResult.Value,
+            _ => throw new Exception($"Unexpected operator: {Operator}")
+        };
+
+        return new DiceResult(
+            result,
+            $"{Operator}{rightResult.Expression}");
     }
 }
 

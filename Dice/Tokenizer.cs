@@ -6,6 +6,7 @@ public class Tokenizer
 
     public Queue<IToken> Tokenize(string expression)
     {
+        Console.WriteLine(expression);
         Stack<char> chars = expression.Reverse().ToStack();
 
         while (chars.TryPeek(out char c))
