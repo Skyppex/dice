@@ -6,7 +6,6 @@ public class Tokenizer
 
     public Queue<IToken> Tokenize(string expression)
     {
-        Console.WriteLine(expression);
         Stack<char> chars = expression.Reverse().ToStack();
 
         while (chars.TryPeek(out char c))
@@ -16,7 +15,7 @@ public class Tokenizer
                 case var _ when IsSkippable(c):
                     chars.Pop();
                     break;
-                
+
                 case var _ when char.IsDigit(c):
                     ParseNumber(chars);
                     break;
@@ -26,40 +25,44 @@ public class Tokenizer
                     chars.Pop();
                     break;
 
-                case Tokens.ADD or Tokens.SUB or Tokens.MUL or Tokens.DIV or Tokens.MOD:
+                case Tokens.ADD
+                or Tokens.SUB
+                or Tokens.MUL
+                or Tokens.DIV
+                or Tokens.MOD:
                     _tokens.Enqueue(new OperatorToken(chars.Pop()));
                     break;
-                
+
                 case Tokens.EXPLODE:
                     _tokens.Enqueue(new ExplodeToken());
                     chars.Pop();
                     break;
-                
+
                 case Tokens.OPEN_PAREN:
                     _tokens.Enqueue(new OpenParenToken());
                     chars.Pop();
                     break;
-                
+
                 case Tokens.CLOSE_PAREN:
                     _tokens.Enqueue(new CloseParenToken());
                     chars.Pop();
                     break;
-                
+
                 case Tokens.OPEN_BRACKET:
                     _tokens.Enqueue(new OpenBracketToken());
                     chars.Pop();
                     break;
-                
+
                 case Tokens.CLOSE_BRACKET:
                     _tokens.Enqueue(new CloseBracketToken());
                     chars.Pop();
                     break;
-                
+
                 case Tokens.DELIMITER:
                     _tokens.Enqueue(new DelimiterToken());
                     chars.Pop();
                     break;
-                
+
                 case Tokens.OR:
                     _tokens.Enqueue(new OrToken());
                     chars.Pop();
@@ -69,42 +72,42 @@ public class Tokenizer
                     _tokens.Enqueue(new KeepToken(c));
                     chars.Pop();
                     break;
-                
+
                 case var _ when IsDropOperator(c, chars):
                     _tokens.Enqueue(new DropToken(c));
                     chars.Pop();
                     break;
-                
+
                 case var _ when Tokens.Highest.Contains(c):
                     _tokens.Enqueue(new HighestToken(c));
                     chars.Pop();
                     break;
-                
+
                 case var _ when Tokens.Lowest.Contains(c):
                     _tokens.Enqueue(new LowestToken(c));
                     chars.Pop();
                     break;
-                
+
                 case var _ when Tokens.Infinite.Contains(c):
                     _tokens.Enqueue(new InfiniteToken(c));
                     chars.Pop();
                     break;
-                
+
                 case var _ when Tokens.ReRoll.Contains(c):
                     _tokens.Enqueue(new ReRollToken(c));
                     chars.Pop();
                     break;
-                
+
                 case var _ when Tokens.FudgeOrFate.Contains(c):
                     _tokens.Enqueue(new FudgeFateToken(c));
                     chars.Pop();
                     break;
-                
+
                 case var _ when Tokens.Unique.Contains(c):
                     _tokens.Enqueue(new UniqueToken(c));
                     chars.Pop();
                     break;
-                
+
                 default:
                     HandleMultilineTokens(chars);
                     break;
@@ -121,7 +124,10 @@ public class Tokenizer
         {
             case var _ when c.ToString() == Tokens.LessThan:
             {
-                if (chars.TryPeek(out char next) && string.Concat(c, next) == Tokens.LessThanOrEqual)
+                if (
+                    chars.TryPeek(out char next)
+                    && string.Concat(c, next) == Tokens.LessThanOrEqual
+                )
                 {
                     chars.Pop();
                     _tokens.Enqueue(new ConditionToken(Tokens.LessThanOrEqual));
@@ -131,23 +137,31 @@ public class Tokenizer
                 _tokens.Enqueue(new ConditionToken(Tokens.LessThan));
                 break;
             }
-            
+
             case var _ when c.ToString() == Tokens.GreaterThan:
             {
-                if (chars.TryPeek(out char next) && string.Concat(c, next) == Tokens.GreaterThanOrEqual)
+                if (
+                    chars.TryPeek(out char next)
+                    && string.Concat(c, next) == Tokens.GreaterThanOrEqual
+                )
                 {
                     chars.Pop();
-                    _tokens.Enqueue(new ConditionToken(Tokens.GreaterThanOrEqual));
+                    _tokens.Enqueue(
+                        new ConditionToken(Tokens.GreaterThanOrEqual)
+                    );
                     break;
                 }
 
                 _tokens.Enqueue(new ConditionToken(Tokens.GreaterThan));
                 break;
             }
-            
+
             case var _ when c.ToString() == Tokens.Equal:
             {
-                if (chars.TryPeek(out char next) && string.Concat(c, next) == Tokens.NotEqual)
+                if (
+                    chars.TryPeek(out char next)
+                    && string.Concat(c, next) == Tokens.NotEqual
+                )
                 {
                     chars.Pop();
                     _tokens.Enqueue(new ConditionToken(Tokens.NotEqual));
@@ -157,7 +171,7 @@ public class Tokenizer
                 _tokens.Enqueue(new ConditionToken(Tokens.Equal));
                 break;
             }
-            
+
             default:
                 throw new InvalidDataException($"Unexpected symbol: {c}");
         }
@@ -166,7 +180,7 @@ public class Tokenizer
     private void ParseNumber(Stack<char> chars)
     {
         string number = string.Empty;
-                
+
         while (chars.TryPeek(out char c) && char.IsDigit(c))
             number += chars.Pop();
 
@@ -174,20 +188,20 @@ public class Tokenizer
     }
 
     private static bool IsSkippable(char c) => c is ' ' or '\t' or '\n' or '\r';
-    
+
     private static bool IsDiceOperator(char c, Stack<char> chars)
     {
         if (!Tokens.Die.Contains(c))
             return false;
 
         chars.Pop();
-        
+
         if (!chars.TryPeek(out char next))
         {
             chars.Push(c);
             return true;
         }
-        
+
         chars.Push(c);
         return !Tokens.Highest.Contains(next) && !Tokens.Lowest.Contains(next);
     }
@@ -198,13 +212,13 @@ public class Tokenizer
             return false;
 
         chars.Pop();
-        
+
         if (!chars.TryPeek(out char next))
         {
             chars.Push(c);
             return false;
         }
-        
+
         chars.Push(c);
         return Tokens.Highest.Contains(next) || Tokens.Lowest.Contains(next);
     }
@@ -295,16 +309,20 @@ public record ReRollToken(char Symbol) : IToken
 public record ConditionToken(string ConditionalOperator) : IToken
 {
     public override string ToString() => ConditionalOperator;
-    public Func<float, bool> GetCondition(int checkValue) => ConditionalOperator switch
-    {
-        var c when c == Tokens.LessThan => v => v < checkValue,
-        var c when c == Tokens.LessThanOrEqual => v => v <= checkValue,
-        var c when c == Tokens.GreaterThan => v => v > checkValue,
-        var c when c == Tokens.GreaterThanOrEqual => v => v >= checkValue,
-        var c when c == Tokens.Equal => v => v == checkValue,
-        var c when c == Tokens.NotEqual => v => v != checkValue,
-        _ => throw new InvalidDataException($"Unexpected conditional operator: {ConditionalOperator}")
-    };
+
+    public Func<float, bool> GetCondition(int checkValue) =>
+        ConditionalOperator switch
+        {
+            var c when c == Tokens.LessThan => v => v < checkValue,
+            var c when c == Tokens.LessThanOrEqual => v => v <= checkValue,
+            var c when c == Tokens.GreaterThan => v => v > checkValue,
+            var c when c == Tokens.GreaterThanOrEqual => v => v >= checkValue,
+            var c when c == Tokens.Equal => v => v == checkValue,
+            var c when c == Tokens.NotEqual => v => v != checkValue,
+            _ => throw new InvalidDataException(
+                $"Unexpected conditional operator: {ConditionalOperator}"
+            ),
+        };
 }
 
 public record FudgeFateToken(char Symbol) : IToken
@@ -337,28 +355,28 @@ public static class Tokens
     public static readonly char[] ReRoll = { 'r', 'R' };
     public static readonly char[] FudgeOrFate = { 'f', 'F' };
     public static readonly char[] Unique = { 'u', 'U' };
-    
+
     public const char EXPLODE = '!';
-    
+
     public const char ADD = '+';
     public const char SUB = '-';
     public const char MUL = '*';
     public const char DIV = '/';
     public const char MOD = '%';
-    
+
     public static readonly string LessThan = "<";
     public static readonly string GreaterThan = ">";
     public static readonly string LessThanOrEqual = "<=";
     public static readonly string GreaterThanOrEqual = ">=";
     public static readonly string Equal = "=";
     public static readonly string NotEqual = "=!";
-    
+
     public const char OR = '\\';
-    
+
     public const char OPEN_PAREN = '(';
     public const char CLOSE_PAREN = ')';
     public const char OPEN_BRACKET = '[';
     public const char CLOSE_BRACKET = ']';
-    
+
     public const char DELIMITER = ',';
 }

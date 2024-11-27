@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Dice;
 
+Thread.Sleep(10000);
 Args parsedArgs = new ArgsParser(args).ParseArgs();
 
 Stopwatch? stopwatch = null;
@@ -17,7 +18,11 @@ if (parsedArgs.Timer)
 try
 {
     DiceResult diceResult = parsedArgs.Mode.Evaluate(parsedArgs.Roll);
-    PrintResults(diceResult.Value, parsedArgs.PrintExpression ? diceResult.Expression : string.Empty, stopwatch);
+    PrintResults(
+        diceResult.Value,
+        parsedArgs.PrintExpression ? diceResult.Expression : string.Empty,
+        stopwatch
+    );
 }
 catch (NotSupportedException e)
 {
@@ -26,11 +31,15 @@ catch (NotSupportedException e)
 
 return;
 
-static void PrintResults(float result, string expressionString, Stopwatch? stopwatch)
+static void PrintResults(
+    float result,
+    string expressionString,
+    Stopwatch? stopwatch
+)
 {
     if (!string.IsNullOrEmpty(expressionString))
         Console.WriteLine($"Expression: {expressionString}");
-        
+
     Console.WriteLine($"Result: {result}");
 
     if (stopwatch != null)
