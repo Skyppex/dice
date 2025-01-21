@@ -10,9 +10,7 @@ public interface IEvaluationMode
 public record NoEvaluation : IEvaluationMode
 {
     public DiceResult Evaluate(string roll) =>
-        throw new NotSupportedException(
-            "Cannot evaluate with no evaluation mode."
-        );
+        throw new NotSupportedException("Cannot evaluate with no evaluation mode.");
 }
 
 public record SingleEvaluation : IEvaluationMode
@@ -48,10 +46,7 @@ public record SimulatedAverageEvaluation(int Iterations) : IEvaluationMode
             .Select(_ => expression.Evaluate(new RandomRollHandler()))
             .Average(dr => dr.Value);
 
-        return new DiceResult(
-            average,
-            $"Rolled ({roll}) {Iterations} times and took the average."
-        );
+        return new DiceResult(average, $"Rolled ({roll}) {Iterations} times and took the average.");
     }
 }
 
@@ -87,17 +82,13 @@ public record SimulatedGraphEvaluation(int Iterations) : IEvaluationMode
         {
             for (int x = 0; x < distributionCount; x++)
             {
-                float count =
-                    (((float)distribution[x] - min) / (max - min)) * HEIGHT;
+                float count = (((float)distribution[x] - min) / (max - min)) * HEIGHT;
                 graph.Append(count >= y ? BLOCK : " ");
             }
             graph.AppendLine();
         }
 
-        return new DiceResult(
-            average,
-            $"Distribution of ({roll}) {Iterations} times:\n{graph}"
-        );
+        return new DiceResult(average, $"Distribution of ({roll}) {Iterations} times:\n{graph}");
     }
 }
 

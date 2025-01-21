@@ -38,6 +38,5 @@ public record AverageRollHandler : IDiceRollHandlers
 {
     public bool ExhaustiveRoll => true;
 
-    public float Handle(IDice dice) =>
-        dice.SideValues.Select(v => (float)v).Average();
+    public float Handle(IDice dice) => dice.SideValues.Select(v => (float)v).Average();
 }

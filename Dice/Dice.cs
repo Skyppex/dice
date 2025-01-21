@@ -13,18 +13,13 @@ public interface IDice
 
     public int Roll();
 
-    public static string DefaultFormat(float v) =>
-        v.ToString(CultureInfo.InvariantCulture);
+    public static string DefaultFormat(float v) => v.ToString(CultureInfo.InvariantCulture);
 }
 
 /// <param name="Min">Inclusive</param>
 /// <param name="Max">Inclusive</param>
-public readonly record struct DiceRange(
-    int Min,
-    int Max,
-    int Count,
-    Func<float, string> Format
-) : IDice
+public readonly record struct DiceRange(int Min, int Max, int Count, Func<float, string> Format)
+    : IDice
 {
     public int Sides => Max - Min + 1;
     public IEnumerable<int> SideValues => Enumerable.Range(Min, Sides);
@@ -34,14 +29,10 @@ public readonly record struct DiceRange(
         var min = Min;
         var max = Max;
 
-        return Enumerable
-            .Range(0, Count)
-            .Select(_ => Random.Shared.Next(min, max + 1))
-            .Sum();
+        return Enumerable.Range(0, Count).Select(_ => Random.Shared.Next(min, max + 1)).Sum();
     }
 
-    public override string ToString() =>
-        Min == 1 ? $"{Max}" : $"[{Min}, {Min}]";
+    public override string ToString() => Min == 1 ? $"{Max}" : $"[{Min}, {Min}]";
 }
 
 public readonly record struct DiceValues(

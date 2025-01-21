@@ -3,15 +3,9 @@ using static Monads.Option;
 
 namespace Dice;
 
-public readonly record struct DiceRoll(
-    IDice Dice,
-    params IRollModifier[] RollModifiers
-)
+public readonly record struct DiceRoll(IDice Dice, params IRollModifier[] RollModifiers)
 {
-    public DiceResult Roll(
-        IDiceRollHandlers handler,
-        IReadOnlyList<float> previousResults
-    )
+    public DiceResult Roll(IDiceRollHandlers handler, IReadOnlyList<float> previousResults)
     {
         List<DiceResult> diceResults = new();
 
@@ -42,8 +36,7 @@ public readonly record struct DiceRoll(
         diceResults.Reverse();
         string expression = diceResults.Count switch
         {
-            > 1 =>
-                $"{string.Join(" <- ", diceResults.Select(dr => dr.Expression))}",
+            > 1 => $"{string.Join(" <- ", diceResults.Select(dr => dr.Expression))}",
             1 => diceResults.Single().Expression,
             _ => diceToUse.Format(total),
         };
@@ -63,8 +56,7 @@ public interface IRollModifier
     );
 }
 
-public record ExplodeModifier(int MaxExplosions = 1, bool Combined = false)
-    : IRollModifier
+public record ExplodeModifier(int MaxExplosions = 1, bool Combined = false) : IRollModifier
 {
     public Option<DiceResult> Modify(
         float total,
@@ -76,13 +68,7 @@ public record ExplodeModifier(int MaxExplosions = 1, bool Combined = false)
     {
         newDice = dice;
         List<float> rolls = new() { total };
-        Option<float> newTotal = ModifyRecurse(
-            total,
-            dice,
-            total,
-            rolls,
-            handler
-        );
+        Option<float> newTotal = ModifyRecurse(total, dice, total, rolls, handler);
 
         if (Combined)
             return newTotal.Map(t => new DiceResult(
@@ -165,11 +151,8 @@ public record ReRollModifier(
         {
             var formattedLastRoll = dice.Format(rolls.Last());
             var suffixExpression = () =>
-                builder.Count > 1
-                    ? $"({string.Join(" <- ", builder)})"
-                    : string.Empty;
-            var suffix =
-                rolls.Count > 1 ? $"r{suffixExpression()}" : string.Empty;
+                builder.Count > 1 ? $"({string.Join(" <- ", builder)})" : string.Empty;
+            var suffix = rolls.Count > 1 ? $"r{suffixExpression()}" : string.Empty;
             return new DiceResult(t, $"{formattedLastRoll}{suffix}");
         });
     }
@@ -231,8 +214,7 @@ public record ReRollModifier(
             {
                 string expression = diceResults.Count switch
                 {
-                    > 1 =>
-                        $"{string.Join(" <- ", diceResults.Select(dr => dr.Expression))}",
+                    > 1 => $"{string.Join(" <- ", diceResults.Select(dr => dr.Expression))}",
                     1 => diceResults.Single().Expression,
                     _ => diceToUse.Format(total),
                 };
@@ -253,10 +235,7 @@ public record ReRollModifier(
     }
 }
 
-public record UniqueModifier(
-    IRollModifier[] RollModifiers,
-    int MaxRetries = 100
-) : IRollModifier
+public record UniqueModifier(IRollModifier[] RollModifiers, int MaxRetries = 100) : IRollModifier
 {
     public Option<DiceResult> Modify(
         float total,
@@ -272,10 +251,7 @@ public record UniqueModifier(
         {
             if (!previousResults.Contains(total))
                 return Some(
-                    new DiceResult(
-                        total,
-                        $"{dice.Format(total)}{(i > 0 ? 'u' : string.Empty)}"
-                    )
+                    new DiceResult(total, $"{dice.Format(total)}{(i > 0 ? 'u' : string.Empty)}")
                 );
 
             total = handler.Handle(dice);
@@ -294,14 +270,11 @@ public record UniqueModifier(
             }
         }
 
-        throw new OverflowException(
-            $"Could not find a unique roll in {MaxRetries} tries."
-        );
+        throw new OverflowException($"Could not find a unique roll in {MaxRetries} tries.");
     }
 }
 
-public record ConditionModifier(List<ConditionModifier.Condition> Conditions)
-    : IRollModifier
+public record ConditionModifier(List<ConditionModifier.Condition> Conditions) : IRollModifier
 {
     public Option<DiceResult> Modify(
         float total,
@@ -334,9 +307,7 @@ public record ConditionModifier(List<ConditionModifier.Condition> Conditions)
 
         bool succeeded = Check(total);
         float newTotal = succeeded ? 1f : 0f;
-        return Some(
-            new DiceResult(newTotal, succeeded ? "Success(1)" : "Failure(0)")
-        );
+        return Some(new DiceResult(newTotal, succeeded ? "Success(1)" : "Failure(0)"));
     }
 
     private bool Check(float total)

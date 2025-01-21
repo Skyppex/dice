@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using Dice;
 
-Thread.Sleep(10000);
 Args parsedArgs = new ArgsParser(args).ParseArgs();
 
 Stopwatch? stopwatch = null;
@@ -31,11 +30,7 @@ catch (NotSupportedException e)
 
 return;
 
-static void PrintResults(
-    float result,
-    string expressionString,
-    Stopwatch? stopwatch
-)
+static void PrintResults(float result, string expressionString, Stopwatch? stopwatch)
 {
     if (!string.IsNullOrEmpty(expressionString))
         Console.WriteLine($"Expression: {expressionString}");

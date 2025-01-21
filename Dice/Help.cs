@@ -10,24 +10,14 @@ public static class Help
         builder.AppendLine("Usage: dice [options] <expression>");
         builder.AppendLine();
         builder.AppendLine("Options:");
+        builder.AppendLine(WriteExplanation("-h, --help", "Print this help message"));
         builder.AppendLine(
-            WriteExplanation("-h, --help", "Print this help message")
+            WriteExplanation("-e, --expr", "Print the expression used to calculate the result")
         );
         builder.AppendLine(
-            WriteExplanation(
-                "-e, --expr",
-                "Print the expression used to calculate the result"
-            )
+            WriteExplanation("-t, --time", "Print the time it took to calculate the result")
         );
-        builder.AppendLine(
-            WriteExplanation(
-                "-t, --time",
-                "Print the time it took to calculate the result"
-            )
-        );
-        builder.AppendLine(
-            WriteExplanation("-m, --mode", "Specify the evaluation mode")
-        );
+        builder.AppendLine(WriteExplanation("-m, --mode", "Specify the evaluation mode"));
         builder.AppendLine(
             WriteExplanation(
                 "    simavg:<iterations>",
@@ -75,28 +65,16 @@ public static class Help
         builder.AppendLine();
         builder.AppendLine("Modifiers:");
         builder.AppendLine(
-            WriteExplanation(
-                "k[<keep>]",
-                "Keep the highest <keep> (default 1) -> 4d6k3"
-            )
+            WriteExplanation("k[<keep>]", "Keep the highest <keep> (default 1) -> 4d6k3")
         );
         builder.AppendLine(
-            WriteExplanation(
-                "kl[<keep>]",
-                "Keep the lowest <keep> (default 1) -> 4d6kl3"
-            )
+            WriteExplanation("kl[<keep>]", "Keep the lowest <keep> (default 1) -> 4d6kl3")
         );
         builder.AppendLine(
-            WriteExplanation(
-                "dh[<drop>]",
-                "Drop the highest <drop> (default 1) -> 4d6dh3"
-            )
+            WriteExplanation("dh[<drop>]", "Drop the highest <drop> (default 1) -> 4d6dh3")
         );
         builder.AppendLine(
-            WriteExplanation(
-                "dl[<drop>]",
-                "Drop the highest <drop> (default 1) -> 4d6dl3"
-            )
+            WriteExplanation("dl[<drop>]", "Drop the highest <drop> (default 1) -> 4d6dl3")
         );
         builder.AppendLine(
             WriteExplanation(
@@ -149,12 +127,8 @@ public static class Help
         builder.AppendLine();
         builder.AppendLine("Basic math operators:");
         builder.AppendLine(WriteExplanation("+", "Addition -> 1d6 + 1d6 + 2"));
-        builder.AppendLine(
-            WriteExplanation("-", "Subtraction -> 1d6 - 1d6 + 2")
-        );
-        builder.AppendLine(
-            WriteExplanation("*", "Multiplication -> 1d6 * 1d6 + 2")
-        );
+        builder.AppendLine(WriteExplanation("-", "Subtraction -> 1d6 - 1d6 + 2"));
+        builder.AppendLine(WriteExplanation("*", "Multiplication -> 1d6 * 1d6 + 2"));
         builder.AppendLine(WriteExplanation("/", "Division -> 1d6 / 1d6 + 2"));
         builder.AppendLine(
             WriteExplanation(
@@ -166,10 +140,7 @@ public static class Help
         Console.Write(builder.ToString());
     }
 
-    private static string WriteExplanation(
-        string expression,
-        string explanation
-    )
+    private static string WriteExplanation(string expression, string explanation)
     {
         int expressionLength = expression.Length;
         const int PADDING = 30;

@@ -146,9 +146,7 @@ public class Tokenizer
                 )
                 {
                     chars.Pop();
-                    _tokens.Enqueue(
-                        new ConditionToken(Tokens.GreaterThanOrEqual)
-                    );
+                    _tokens.Enqueue(new ConditionToken(Tokens.GreaterThanOrEqual));
                     break;
                 }
 
@@ -158,10 +156,7 @@ public class Tokenizer
 
             case var _ when c.ToString() == Tokens.Equal:
             {
-                if (
-                    chars.TryPeek(out char next)
-                    && string.Concat(c, next) == Tokens.NotEqual
-                )
+                if (chars.TryPeek(out char next) && string.Concat(c, next) == Tokens.NotEqual)
                 {
                     chars.Pop();
                     _tokens.Enqueue(new ConditionToken(Tokens.NotEqual));

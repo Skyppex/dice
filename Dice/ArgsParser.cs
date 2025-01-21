@@ -1,14 +1,8 @@
 namespace Dice;
 
-public record Args(
-    IEvaluationMode Mode,
-    string Roll,
-    bool PrintExpression,
-    bool Timer
-)
+public record Args(IEvaluationMode Mode, string Roll, bool PrintExpression, bool Timer)
 {
-    public static readonly Args Empty =
-        new(new NoEvaluation(), string.Empty, false, false);
+    public static readonly Args Empty = new(new NoEvaluation(), string.Empty, false, false);
 }
 
 public class ArgsParser

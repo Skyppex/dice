@@ -6,8 +6,7 @@ public static class Result
 {
     public static Result<T, TError> Ok<T, TError>(T value) => new(value);
 
-    public static Result<T, TError> Error<T, TError>(TError error) =>
-        new(error);
+    public static Result<T, TError> Error<T, TError>(TError error) => new(error);
 }
 
 public readonly struct Result<T, TError>
@@ -59,11 +58,9 @@ public static class ResultExtensions
         return result.IsOk() ? ok(result.Value!) : error(result.Error);
     }
 
-    public static bool IsOk<T, TError>(this Result<T, TError> result) =>
-        result.IsOk;
+    public static bool IsOk<T, TError>(this Result<T, TError> result) => result.IsOk;
 
-    public static bool IsError<T, TError>(this Result<T, TError> result) =>
-        !result.IsOk();
+    public static bool IsError<T, TError>(this Result<T, TError> result) => !result.IsOk();
 
     public static Option<T> Ok<T, TError>(this Result<T, TError> result) =>
         result.IsOk() ? Some(result.Value!) : None<T>();
@@ -122,9 +119,7 @@ public static class ResultExtensions
     )
     {
         ArgumentNullException.ThrowIfNull(func, nameof(func));
-        return result.IsOk()
-            ? func(result.Value!)
-            : Result.Error<T2, TError>(result.Error);
+        return result.IsOk() ? func(result.Value!) : Result.Error<T2, TError>(result.Error);
     }
 
     public static Result<T, TErrorResult> Or<T, TError, TErrorResult>(
@@ -138,9 +133,7 @@ public static class ResultExtensions
     )
     {
         ArgumentNullException.ThrowIfNull(func, nameof(func));
-        return result.IsOk()
-            ? Result.Ok<T, TErrorResult>(result.Value!)
-            : func();
+        return result.IsOk() ? Result.Ok<T, TErrorResult>(result.Value!) : func();
     }
 
     public static Option<Result<T, TError>> Transpose<T, TError>(
@@ -163,10 +156,7 @@ public static class ResultExtensions
             return result.Value!;
 
         if (result.Error is Exception exception)
-            throw new InvalidOperationException(
-                "Called expect on an Error value.",
-                exception
-            );
+            throw new InvalidOperationException("Called expect on an Error value.", exception);
 
         throw new InvalidOperationException("Called expect on an Error value.");
     }
@@ -174,27 +164,18 @@ public static class ResultExtensions
     public static TError UnwrapError<T, TError>(this Result<T, TError> result)
     {
         if (result.IsOk())
-            throw new InvalidOperationException(
-                "Called unwrap error on an Ok value."
-            );
+            throw new InvalidOperationException("Called unwrap error on an Ok value.");
 
         return result.Error;
     }
 
-    public static T UnwrapOr<T, TError>(
-        this Result<T, TError> result,
-        T defaultValue
-    ) => result.IsOk() ? result.Value! : defaultValue;
+    public static T UnwrapOr<T, TError>(this Result<T, TError> result, T defaultValue) =>
+        result.IsOk() ? result.Value! : defaultValue;
 
-    public static T UnwrapOrElse<T, TError>(
-        this Result<T, TError> result,
-        Func<T> defaultGetter
-    ) => result.IsOk() ? result.Value! : defaultGetter();
+    public static T UnwrapOrElse<T, TError>(this Result<T, TError> result, Func<T> defaultGetter) =>
+        result.IsOk() ? result.Value! : defaultGetter();
 
-    public static T Expect<T, TError>(
-        this Result<T, TError> result,
-        string message
-    )
+    public static T Expect<T, TError>(this Result<T, TError> result, string message)
     {
         if (result.IsOk())
             return result.Value!;
@@ -205,14 +186,10 @@ public static class ResultExtensions
                 exception
             );
 
-        throw new InvalidOperationException(
-            $"Called expect on an Error value. {message}"
-        );
+        throw new InvalidOperationException($"Called expect on an Error value. {message}");
     }
 
-    public static IEnumerator<T> Iterable<T, TError>(
-        this Result<T, TError> result
-    )
+    public static IEnumerator<T> Iterable<T, TError>(this Result<T, TError> result)
     {
         if (result.IsOk())
             yield return result.Value;
@@ -221,9 +198,7 @@ public static class ResultExtensions
     /// <summary>
     /// Returns the first Ok value in the sequence as a Some value, or None if there are no Ok values.
     /// </summary>
-    public static Option<T> Coalesce<T, TError>(
-        this IEnumerable<Result<T, TError>> results
-    )
+    public static Option<T> Coalesce<T, TError>(this IEnumerable<Result<T, TError>> results)
     {
         foreach (Result<T, TError> result in results)
             if (result.IsOk())
@@ -236,7 +211,6 @@ public static class ResultExtensions
         this Result<Result<T, TError>, TError> result
     ) => result.Match(ok: r => r, error: Result.Error<T, TError>);
 
-    public static IEnumerable<T> Flatten<T, TError>(
-        this IEnumerable<Result<T, TError>> results
-    ) => results.Where(result => result.IsOk()).Select(result => result.Value!);
+    public static IEnumerable<T> Flatten<T, TError>(this IEnumerable<Result<T, TError>> results) =>
+        results.Where(result => result.IsOk()).Select(result => result.Value!);
 }
